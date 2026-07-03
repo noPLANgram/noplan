@@ -57,7 +57,8 @@
   #tagline p{margin-top:10px;font-size:clamp(10px,1.8vw,12.5px);letter-spacing:.42em;text-transform:uppercase;color:#6f6a5c}
   #stats{margin-top:16px;display:flex;gap:clamp(14px,3vw,28px);justify-content:center;flex-wrap:wrap;
     font-size:clamp(10px,2vw,13px);letter-spacing:.22em;color:#8a8272;text-transform:uppercase}
-  #stats b{color:var(--gold);font-variant-numeric:tabular-nums;letter-spacing:.06em}
+  #stats b{color:var(--gold);font-variant-numeric:tabular-nums;letter-spacing:.06em;transition:color .5s,text-shadow .5s}
+  #stats b.tick{color:var(--white);text-shadow:0 0 14px rgba(242,196,29,.8);transition:none}
 
   /* bottom bar */
   footer.hud{bottom:0;left:0;right:0;display:flex;flex-direction:column;gap:10px;align-items:center;
@@ -675,6 +676,20 @@ async function scanHolders(){
 }
 
 /* ---- market stats (mcap / price / holders) ---- */
+let tokenSupply = 1e8; // 100M fallback; refined from API below
+function setPriceMcap(price, flash){
+  if (!price) return;
+  const mcapEl = document.getElementById('mcap');
+  const priceEl = document.getElementById('price');
+  mcapEl.textContent = '$' + fmt(price * tokenSupply);
+  priceEl.textContent = '$' + (price < 0.01 ? price.toPrecision(3) : price.toFixed(4));
+  if (flash){
+    [mcapEl, priceEl].forEach(el => {
+      el.classList.add('tick');
+      setTimeout(()=> el.classList.remove('tick'), 60);
+    });
+  }
+}
 async function pollStats(){
   try {
     const r = await fetch(`https://api.geckoterminal.com/api/v2/networks/ton/pools/${POOL}`);
@@ -682,8 +697,8 @@ async function pollStats(){
       const at = (await r.json()).data.attributes;
       const mcap = Number(at.market_cap_usd || at.fdv_usd || 0);
       const price = Number(at.base_token_price_usd || 0);
-      if (mcap) document.getElementById('mcap').textContent = '$' + fmt(mcap);
-      if (price) document.getElementById('price').textContent = '$' + (price < 0.01 ? price.toPrecision(3) : price.toFixed(4));
+      if (mcap && price) tokenSupply = mcap / price;
+      setPriceMcap(price);
     }
   } catch(e){}
   try {
@@ -721,6 +736,7 @@ function registerTrade(tr, animate){
   txTotal++; countEl.textContent = txTotal;
   addBranch(tr);
   playTrade(tr.kind, tr.usd);
+  setPriceMcap(tr.price, true);
 
   const a = document.createElement('a');
   a.className = 'tx' + (tr.kind ? ' '+tr.kind : '');
@@ -752,6 +768,7 @@ function parseTrade(item){
     hash: at.tx_hash,
     kind: at.kind || null,
     usd: Number(at.volume_in_usd || 0),
+    price: Number(buy ? at.price_to_in_usd : at.price_from_in_usd) || 0,
     label: `${fmt(tokens)} · $${fmt(at.volume_in_usd)}`,
     addr: at.tx_from_address || null,
     who: short(at.tx_from_address),
