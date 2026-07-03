@@ -55,6 +55,9 @@
     color:var(--white);text-shadow:0 0 30px rgba(242,196,29,.25)}
   #tagline h1 b{color:var(--gold);font-weight:600}
   #tagline p{margin-top:10px;font-size:clamp(10px,1.8vw,12.5px);letter-spacing:.42em;text-transform:uppercase;color:#6f6a5c}
+  #stats{margin-top:16px;display:flex;gap:clamp(14px,3vw,28px);justify-content:center;flex-wrap:wrap;
+    font-size:clamp(10px,2vw,13px);letter-spacing:.22em;color:#8a8272;text-transform:uppercase}
+  #stats b{color:var(--gold);font-variant-numeric:tabular-nums;letter-spacing:.06em}
 
   /* bottom bar */
   footer.hud{bottom:0;left:0;right:0;display:flex;flex-direction:column;gap:10px;align-items:center;
@@ -93,6 +96,36 @@
   .tx.sell{border-left-color:var(--red)}.tx.sell .k{color:var(--red)}
   @keyframes txin{to{opacity:1;transform:none}}
 
+  /* dns holders panel — right side */
+  #dnspanel{position:fixed;z-index:10;right:clamp(10px,2vw,24px);top:clamp(170px,24vh,230px);bottom:clamp(150px,24vh,200px);
+    width:min(56vw,240px);display:flex;flex-direction:column;gap:6px;overflow:hidden;align-items:flex-end;pointer-events:none;
+    -webkit-mask-image:linear-gradient(180deg,#000 78%,transparent);
+    mask-image:linear-gradient(180deg,#000 78%,transparent)}
+  #dnspanel .hd{font-size:9.5px;letter-spacing:.34em;color:#7d7663;text-transform:uppercase;padding:2px 2px 6px;display:none}
+  #dnspanel.has .hd{display:block}
+  .dnsent{pointer-events:auto;display:flex;flex-direction:column;gap:2px;font-family:Consolas,monospace;font-size:11.5px;
+    background:rgba(10,10,10,.5);border-right:2px solid var(--gold);padding:6px 11px;border-radius:8px 0 0 8px;
+    backdrop-filter:blur(4px);text-decoration:none;color:var(--gold);text-align:right;opacity:0;transform:translateX(14px);
+    animation:dnsin .6s ease forwards;transition:box-shadow .2s}
+  .dnsent:hover{box-shadow:0 0 16px rgba(242,196,29,.2)}
+  .dnsent .sub{color:#5d574b;font-size:9.5px}
+  @keyframes dnsin{to{opacity:1;transform:none}}
+
+  /* trade info card */
+  #card{position:fixed;z-index:25;right:clamp(10px,2vw,24px);bottom:clamp(160px,26vh,210px);width:min(84vw,260px);
+    background:rgba(12,11,8,.88);border:1px solid rgba(242,196,29,.38);border-radius:14px;padding:13px 15px;
+    backdrop-filter:blur(10px);display:none;font-family:Consolas,monospace}
+  #card.show{display:block;animation:txin .4s ease forwards;opacity:1;transform:none}
+  #card .k{font-size:13px;letter-spacing:.14em}
+  #card.buy .k{color:var(--green)} #card.sell .k{color:var(--red)}
+  #card .amt{margin-top:6px;font-size:13px;color:#e8e2d2}
+  #card .who{margin-top:4px;font-size:11px;color:#a79f8b;word-break:break-all}
+  #card .who.dns{color:var(--gold)}
+  #card .tm{margin-top:4px;font-size:10px;color:#5d574b}
+  #card a{display:inline-block;margin-top:9px;font-size:10px;letter-spacing:.22em;color:var(--gold);text-decoration:none;
+    border:1px solid rgba(242,196,29,.35);border-radius:999px;padding:5px 12px;text-transform:uppercase}
+  #card .x{position:absolute;top:8px;right:12px;color:#6f6a5c;cursor:pointer;font-size:14px}
+
   /* toast */
   #toast{position:fixed;left:50%;bottom:34%;transform:translateX(-50%) translateY(8px);z-index:60;background:rgba(15,14,10,.92);
     border:1px solid rgba(242,196,29,.4);color:var(--gold);letter-spacing:.28em;text-transform:uppercase;font-size:11px;
@@ -109,7 +142,8 @@
 
   @media (max-width:640px){
     .brand .sub{display:none}
-    #feed{top:190px;bottom:160px;width:62vw}
+    #feed{top:210px;bottom:160px;width:46vw}
+    #dnspanel{top:210px;bottom:170px;width:44vw}
     #tagline h1{letter-spacing:.2em}
     .live span{display:none}
   }
@@ -145,9 +179,27 @@
 <div class="hud" id="tagline">
   <h1>There is no plan. <b>Only the tree.</b></h1>
   <p>every trade becomes a branch</p>
+  <div id="stats">
+    <span>mcap <b id="mcap">—</b></span>
+    <span>price <b id="price">—</b></span>
+    <span>holders <b id="holders">—</b></span>
+  </div>
 </div>
 
 <div class="hud" id="feed"></div>
+
+<div id="dnspanel">
+  <div class="hd">◈ ton dns detected</div>
+</div>
+
+<div id="card">
+  <span class="x" id="cardx">✕</span>
+  <div class="k" id="cardk"></div>
+  <div class="amt" id="cardamt"></div>
+  <div class="who" id="cardwho"></div>
+  <div class="tm" id="cardtm"></div>
+  <a id="cardlink" href="#" target="_blank" rel="noopener">tonviewer ↗</a>
+</div>
 
 <footer class="hud">
   <div class="ca" id="ca" title="copy contract address">
@@ -160,7 +212,7 @@
     <a class="btn ghost" href="https://tonviewer.com/EQB3kSUC688buwPIwz34jX5KDB4O7naqlGLPoEAzB5LIh9qg" target="_blank" rel="noopener">Tonviewer</a>
     <a class="btn ghost" href="https://dexscreener.com/ton/EQDWnsxS1XujfKqchyRST4OScg4Fo92gECFBS7cOpXMRU_6C" target="_blank" rel="noopener">Chart</a>
   </div>
-  <div class="hint">drag to explore · click a branch to inspect the trade</div>
+  <div class="hint">drag to explore · scroll / pinch to zoom · click a node to fly in · double-click to pull back</div>
 </footer>
 
 <div id="toast">copied</div>
@@ -277,6 +329,20 @@ const labels  = [];  // fading text labels
 const GOLDEN = Math.PI * (3 - Math.sqrt(5));
 let branchCount = 0;
 
+/* each wallet address gets its own color; its trades are woven together */
+const addrColors = new Map();
+let hueIdx = 0;
+function colorFor(addr){
+  if (!addr) return new THREE.Color(GOLD);
+  if (!addrColors.has(addr)){
+    const h = (hueIdx++ * 137.508) % 360;
+    addrColors.set(addr, new THREE.Color().setHSL(h/360, 0.78, 0.56));
+  }
+  return addrColors.get(addr);
+}
+const addrLast = new Map();   // addr -> last node (for weaving links)
+const weave = [];             // link lines between same-address nodes
+
 function pickParent(){
   const k = Math.min(nodes.length, 40);
   const pool = nodes.slice(-k);
@@ -300,22 +366,44 @@ function addBranch(trade){
   const to = parent.pos.clone().addScaledVector(dir, Math.max(len, 0.9));
   to.y = Math.max(to.y, 0.5);
 
-  const color = trade.kind==='buy' ? GREEN : trade.kind==='sell' ? RED : GOLD;
+  const color = trade.kind==='buy' ? GREEN : trade.kind==='sell' ? RED : GOLD;   // branch = direction
+  const idColor = colorFor(trade.addr);                                           // node = wallet identity
 
   const geo = new THREE.BufferGeometry().setFromPoints([parent.pos, parent.pos]);
-  const line = new THREE.Line(geo, new THREE.LineBasicMaterial({ color, transparent:true, opacity:0.75 }));
+  const line = new THREE.Line(geo, new THREE.LineBasicMaterial({ color, transparent:true, opacity:0.7 }));
   tree.add(line);
 
-  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map:GLOW, color, transparent:true, opacity:0.95, depthWrite:false, blending:THREE.AdditiveBlending }));
+  // dim halo in the wallet's color
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map:GLOW, color:idColor, transparent:true, opacity:0.4, depthWrite:false, blending:THREE.AdditiveBlending }));
   glow.scale.setScalar(0.001); glow.position.copy(parent.pos); tree.add(glow);
-  const core = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 12),
-    new THREE.MeshBasicMaterial({ color:0xfff3c4 }));
+
+  // node: a small 3D trapezoid (truncated pyramid) in the wallet's color
+  const core = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.11, 0.24, 0.3, 4, 1),
+    new THREE.MeshStandardMaterial({ color:idColor, emissive:idColor, emissiveIntensity:0.4, roughness:0.45, metalness:0.35 })
+  );
+  core.scale.setScalar(0.9 + mag*0.9);
+  core.rotation.set(Math.random()*0.6-0.3, Math.random()*Math.PI, Math.random()*0.6-0.3);
   core.position.copy(parent.pos); core.visible = false; tree.add(core);
-  core.userData.hash = trade.hash; clickable.push(core);
+  core.userData.trade = trade; clickable.push(core);
 
   const ring = new THREE.Mesh(new THREE.RingGeometry(0.1, 0.16, 48),
     new THREE.MeshBasicMaterial({ color, transparent:true, opacity:0.9, side:THREE.DoubleSide, depthWrite:false }));
   ring.position.copy(to); ring.lookAt(camera.position); tree.add(ring);
+
+  // weave: connect to this wallet's previous trade with a thread in its color
+  let link = null;
+  if (trade.addr && addrLast.has(trade.addr)){
+    const prev = addrLast.get(trade.addr);
+    const mid = prev.pos.clone().lerp(to, 0.5); mid.y += prev.pos.distanceTo(to)*0.22;
+    const curve = new THREE.QuadraticBezierCurve3(prev.pos.clone(), mid, to.clone());
+    link = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(curve.getPoints(24)),
+      new THREE.LineBasicMaterial({ color:idColor, transparent:true, opacity:0.32 })
+    );
+    tree.add(link); weave.push(link);
+    while (weave.length > 160){ tree.remove(weave.shift()); }
+  }
 
   // floating label with amount + trader
   let label = null;
@@ -332,7 +420,8 @@ function addBranch(trade){
 
   const node = { pos:to, dir, depth:parent.depth+1, mesh:core, glow, line, birth:performance.now() };
   nodes.push(node);
-  growing.push({ line, from:parent.pos.clone(), to, core, glow, ring, label, start:performance.now(), dur:750, glowScale: 1.1 + mag*1.5 });
+  if (trade.addr) addrLast.set(trade.addr, node);
+  growing.push({ line, from:parent.pos.clone(), to, core, glow, ring, label, start:performance.now(), dur:750, glowScale: 0.6 + mag*0.8 });
 
   heart.intensity = 220;
 
@@ -344,17 +433,47 @@ function addBranch(trade){
   }
 }
 
-/* clicking a node opens tonviewer */
+/* clicking a node: fly the camera to it and show the trade card */
+let focus = null;   // {point, dist}
 const ray = new THREE.Raycaster(); const ptr = new THREE.Vector2();
-let downAt = 0;
-canvas.addEventListener('pointerdown', ()=> downAt = performance.now());
+ray.params.Line = { threshold: 0 };
+const cardEl = document.getElementById('card');
+
+function showCard(tr){
+  const arrow = tr.kind==='buy'?'▲':tr.kind==='sell'?'▼':'✦';
+  const verb = tr.kind==='buy'?'BUY':tr.kind==='sell'?'SELL':'TX';
+  cardEl.className = 'show' + (tr.kind ? ' '+tr.kind : '');
+  document.getElementById('cardk').textContent = `${arrow} ${verb}`;
+  document.getElementById('cardamt').textContent = tr.label;
+  const whoEl = document.getElementById('cardwho');
+  whoEl.textContent = tr.who;
+  whoEl.classList.toggle('dns', !tr.who.includes('…'));
+  document.getElementById('cardtm').textContent = tr.ts ? new Date(tr.ts).toLocaleString() : '';
+  document.getElementById('cardlink').href = 'https://tonviewer.com/transaction/'+tr.hash;
+}
+document.getElementById('cardx').addEventListener('click', ()=> cardEl.className = '');
+
+let downAt = 0, downXY = [0,0];
+canvas.addEventListener('pointerdown', e => { downAt = performance.now(); downXY = [e.clientX, e.clientY]; focus = null; });
 canvas.addEventListener('pointerup', e => {
-  if (performance.now() - downAt > 250) return;
+  if (performance.now() - downAt > 300) return;
+  if (Math.hypot(e.clientX-downXY[0], e.clientY-downXY[1]) > 8) return;
   ptr.x = (e.clientX/innerWidth)*2-1; ptr.y = -(e.clientY/innerHeight)*2+1;
   ray.setFromCamera(ptr, camera);
   const hits = ray.intersectObjects(clickable, false);
-  if (hits.length && hits[0].object.userData.hash)
-    window.open('https://tonviewer.com/transaction/'+hits[0].object.userData.hash, '_blank');
+  if (hits.length && hits[0].object.userData.trade){
+    const obj = hits[0].object;
+    focus = { point: obj.position.clone(), dist: 7 };
+    controls.autoRotate = false;
+    showCard(obj.userData.trade);
+  } else {
+    cardEl.className = '';
+  }
+});
+// double-click empty space: pull back to the whole tree
+canvas.addEventListener('dblclick', ()=>{
+  focus = { point: new THREE.Vector3(0, 12, 0), dist: 42 };
+  cardEl.className = '';
 });
 
 /* ============ animation ============ */
@@ -388,6 +507,19 @@ function loop(now){
     L.sp.material.opacity = a < 0.06 ? a/0.06 : a > 0.75 ? (1-a)/0.25 : 1;
     L.sp.position.y += 0.0035;
   }
+
+  // camera fly-to on focus
+  if (focus){
+    controls.target.lerp(focus.point, 0.07);
+    const dir = camera.position.clone().sub(focus.point);
+    const d = dir.length(); dir.normalize();
+    const desired = focus.point.clone().addScaledVector(dir, focus.dist);
+    camera.position.lerp(desired, 0.07);
+    if (Math.abs(d - focus.dist) < 0.2 && controls.target.distanceTo(focus.point) < 0.2) focus = null;
+  }
+
+  // slow spin of the trapezoid nodes
+  for (const n of nodes) if (n.mesh && n.mesh.visible) n.mesh.rotation.y += 0.008;
 
   const breathe = 1 + Math.sin(t*1.4)*0.12;
   rootGlow.scale.setScalar(9*breathe);
@@ -503,10 +635,64 @@ sndBtn.addEventListener('click', ()=>{
 const dnsCache = new Map();          // address -> name|null
 const dnsQueue = [];
 let dnsBusy = false;
-function resolveDNS(addr, cb){
+function resolveDNS(addr, cb, lowPriority){
   if (dnsCache.has(addr)){ cb(dnsCache.get(addr)); return; }
-  dnsQueue.push({ addr, cb });
+  if (lowPriority) dnsQueue.push({ addr, cb });
+  else dnsQueue.unshift({ addr, cb });
   pumpDNS();
+}
+
+/* ---- right panel: wallets that own a TON DNS name ---- */
+const dnsPanel = document.getElementById('dnspanel');
+const dnsShown = new Set();
+function addDnsHit(addr, name, sub){
+  if (!name || dnsShown.has(addr)) return;
+  dnsShown.add(addr);
+  dnsPanel.classList.add('has');
+  const a = document.createElement('a');
+  a.className = 'dnsent';
+  a.href = 'https://tonviewer.com/' + addr; a.target = '_blank'; a.rel = 'noopener';
+  a.innerHTML = `<span>◈ ${name}</span><span class="sub">${sub || short(addr)}</span>`;
+  dnsPanel.insertBefore(a, dnsPanel.children[1] || null);
+  while (dnsPanel.children.length > 13) dnsPanel.removeChild(dnsPanel.lastChild);
+}
+
+/* scan top holders for .ton names */
+async function scanHolders(){
+  try {
+    const r = await fetch(`https://tonapi.io/v2/jettons/${CA}/holders?limit=40`);
+    if (!r.ok) return;
+    const j = await r.json();
+    (j.addresses || []).forEach(h => {
+      const o = h.owner || {};
+      if (!o.address || !o.is_wallet) return;
+      const pct = Number(h.balance) / 1e15;   // % of 100M supply with 9 decimals
+      const sub = pct >= 0.01 ? pct.toFixed(2) + '% supply' : null;
+      if (o.name) addDnsHit(o.address, o.name, sub);
+      else resolveDNS(o.address, name => addDnsHit(o.address, name, sub), true);
+    });
+  } catch(e){}
+}
+
+/* ---- market stats (mcap / price / holders) ---- */
+async function pollStats(){
+  try {
+    const r = await fetch(`https://api.geckoterminal.com/api/v2/networks/ton/pools/${POOL}`);
+    if (r.ok){
+      const at = (await r.json()).data.attributes;
+      const mcap = Number(at.market_cap_usd || at.fdv_usd || 0);
+      const price = Number(at.base_token_price_usd || 0);
+      if (mcap) document.getElementById('mcap').textContent = '$' + fmt(mcap);
+      if (price) document.getElementById('price').textContent = '$' + (price < 0.01 ? price.toPrecision(3) : price.toFixed(4));
+    }
+  } catch(e){}
+  try {
+    const r2 = await fetch(`https://tonapi.io/v2/jettons/${CA}`);
+    if (r2.ok){
+      const h = (await r2.json()).holders_count;
+      if (h != null) document.getElementById('holders').textContent = h;
+    }
+  } catch(e){}
 }
 async function pumpDNS(){
   if (dnsBusy || !dnsQueue.length) return;
@@ -542,6 +728,8 @@ function registerTrade(tr, animate){
   const arrow = tr.kind==='buy'?'▲':tr.kind==='sell'?'▼':'✦';
   const verb = tr.kind==='buy'?'BUY':tr.kind==='sell'?'SELL':'TX';
   a.innerHTML = `<span class="k">${arrow} ${verb}</span><span>${tr.label}</span><span class="who">${tr.who}</span>`;
+  const whoEl = a.querySelector('.who');
+  if (tr.addr && whoEl) whoEl.style.color = '#' + colorFor(tr.addr).getHexString();
   feedEl.prepend(a);
   while (feedEl.children.length > 24) feedEl.removeChild(feedEl.lastChild);
 
@@ -550,8 +738,8 @@ function registerTrade(tr, animate){
     resolveDNS(tr.addr, name => {
       if (!name) return;
       tr.who = name;
-      const whoEl = a.querySelector('.who');
-      if (whoEl){ whoEl.textContent = name; whoEl.classList.add('dns'); }
+      if (whoEl){ whoEl.textContent = name; whoEl.classList.add('dns'); whoEl.style.color = ''; }
+      addDnsHit(tr.addr, name, 'trader');
     });
   }
 }
@@ -604,6 +792,10 @@ document.getElementById('ca').addEventListener('click', async ()=>{
 setTimeout(()=> document.getElementById('veil').classList.add('gone'), 1900);
 poll();
 setInterval(poll, POLL_MS);
+pollStats();
+setInterval(pollStats, 45000);
+setTimeout(scanHolders, 4000);
+setInterval(scanHolders, 300000);
 </script>
 </body>
 </html>
