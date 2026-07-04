@@ -81,11 +81,18 @@
   .btn.ghost:hover{border-color:rgba(242,196,29,.5);color:var(--gold)}
   .hint{font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:#57534a}
 
-  /* feed — tall side column */
+  /* feed — tall side column, scrollable */
   #feed{left:clamp(10px,2vw,24px);top:clamp(170px,24vh,230px);bottom:clamp(140px,22vh,190px);
-    width:min(78vw,300px);display:flex;flex-direction:column;gap:6px;overflow:hidden;
+    width:min(78vw,300px);display:flex;flex-direction:column;gap:6px;overflow-y:auto;overflow-x:hidden;
+    pointer-events:auto;overscroll-behavior:contain;
+    scrollbar-width:thin;scrollbar-color:rgba(242,196,29,.35) transparent;
     -webkit-mask-image:linear-gradient(180deg,#000 78%,transparent);
     mask-image:linear-gradient(180deg,#000 78%,transparent)}
+  #feed:hover{-webkit-mask-image:none;mask-image:none}
+  #feed::-webkit-scrollbar{width:5px}
+  #feed::-webkit-scrollbar-thumb{background:rgba(242,196,29,.3);border-radius:99px}
+  #feed::-webkit-scrollbar-track{background:transparent}
+  .tx{flex:none}
   .tx{pointer-events:auto;display:flex;align-items:center;gap:8px;font-family:Consolas,monospace;font-size:11px;
     color:#a79f8b;background:rgba(10,10,10,.5);border-left:2px solid var(--gold);padding:6px 10px;border-radius:0 8px 8px 0;
     backdrop-filter:blur(4px);text-decoration:none;opacity:0;transform:translateX(-14px);
@@ -135,10 +142,11 @@
 
   /* sound toggle */
   .hudright{display:flex;align-items:center;gap:10px;pointer-events:auto}
-  #snd{display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;
+  #snd,#lang{display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;
     background:rgba(10,10,10,.55);border:1px solid rgba(242,196,29,.18);color:#b9b09a;cursor:pointer;
     font-size:16px;backdrop-filter:blur(6px);transition:.3s}
-  #snd:hover{border-color:rgba(242,196,29,.5);color:var(--gold)}
+  #snd:hover,#lang:hover{border-color:rgba(242,196,29,.5);color:var(--gold)}
+  #lang{font-size:11px;letter-spacing:.06em;font-weight:700}
   #snd.on{color:var(--gold);box-shadow:0 0 14px rgba(242,196,29,.25)}
 
   /* ---------- ritual panels (branch / chronicle / prophecy) ---------- */
@@ -215,6 +223,7 @@
     </div>
   </div>
   <div class="hudright">
+    <button id="lang" title="language">RU</button>
     <button id="snd" title="sound">◌</button>
     <div class="live" id="live">
       <div class="dot"></div>
@@ -869,7 +878,7 @@ function registerTrade(tr, animate){
   const whoEl = a.querySelector('.who');
   if (tr.addr && whoEl) whoEl.style.color = '#' + colorFor(tr.addr).getHexString();
   feedEl.prepend(a);
-  while (feedEl.children.length > 24) feedEl.removeChild(feedEl.lastChild);
+  while (feedEl.children.length > 120) feedEl.removeChild(feedEl.lastChild);
 
   // resolve .ton name in background, then upgrade the label
   if (tr.addr){
@@ -923,7 +932,9 @@ async function poll(){
 document.getElementById('ca').addEventListener('click', async ()=>{
   try { await navigator.clipboard.writeText(CA); }
   catch(e){ const ta=document.createElement('textarea'); ta.value=CA; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
-  const t = document.getElementById('toast'); t.classList.add('show');
+  const t = document.getElementById('toast');
+  t.textContent = (typeof tt === 'function') ? tt('copied') : 'copied';
+  t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), 1400);
 });
 
@@ -989,6 +1000,132 @@ function cardFrame(x){
   x.strokeStyle = 'rgba(242,196,29,.12)'; x.lineWidth = 1; x.strokeRect(40,40,1000,1270);
 }
 
+/* ---- i18n: EN / RU ---- */
+const I18N = {
+en: {
+  whisper:'entering the void', live:'live tree',
+  h1:'There is no plan. <b>Only the tree.</b>', sub:'every trade becomes a branch',
+  mcap:'mcap', price:'price', holders:'holders', copy:'copy', copied:'copied',
+  hint:'drag to explore · scroll / pinch to zoom · click a node to fly in · double-click to pull back',
+  dns:'◈ ton dns detected', chart:'Chart',
+  navBranch:'◈ Your Branch', navChron:'❖ Chronicle', navProph:'☾ Prophecy',
+  bTitle:'◈ Your Branch', bDesc:'Every wallet is a branch of the tree. Find yours — enter a TON address or a .ton name.',
+  bPh:'UQ… / EQ… / yourname.ton', bGo:'find',
+  bAsk:'asking the tree…', bRings:'reading your rings…', bUnknown:'the tree does not know this name.',
+  bEmpty:'this wallet holds no $NOPLAN — the tree awaits.',
+  bBal:'balance', bPct:'% of supply', bDays:'holding for', bRank:'holder rank',
+  badgeNone:'not a holder — yet', badgeDia:'◆ diamond hands — never sold', badgeHold:'holder — the hands have traded',
+  days:'days', bFly:'⤴ fly to my branch', bSave:'save card', bShare:'share',
+  lblDia:'diamond hands', lblHold:'holder', lblNone:'not yet grown',
+  cardTag:'THERE IS NO PLAN. ONLY THE TREE.',
+  cardNone:'A BRANCH NOT YET GROWN', cardHold:'HOLDER OF THE TREE', cardDia:'◆ DIAMOND HANDS — NEVER SOLD',
+  cardSupply:'OF SUPPLY', cardHolding:'HOLDING', cardDays:'DAYS', cardUnrooted:'UNROOTED', cardRank:'RANK',
+  chTitle:'❖ Chronicle of Chaos',
+  chDesc:'The full on-chain history of $NOPLAN, read straight from the TON ledger. No archive, no database — only the chain remembers.',
+  chOpening:'opening the ledger…', chDig:'excavating the chain…', chFound:'transfers unearthed',
+  chFail:'the chronicle resists. try again later.', chNone:'no trades carved into the chain yet.',
+  chAge:'tree age', chTrades:'total trades', chBS:'buys / sells', chWal:'wallets touched', chVol:'volume', chBig:'biggest buy',
+  ogHd:'⛧ the first ten — OGs of the tree', chReplay:'▶ replay genesis',
+  replayS:'replaying genesis — the whole history of the tree',
+  pTitle:'☾ Daily Prophecy',
+  pDesc:"Written by no one. Derived from today's date and the contract itself — the same words for every believer, everywhere, all day.",
+  pSave:'save sigil', pCopy:'copy prophecy', pShare:'share', pCopied:'prophecy copied',
+  pHead:'DAILY PROPHECY', noPlan:'There is no plan.',
+  shareBranch:'my branch of the $NOPLAN tree — there is no plan. https://noplangram.github.io/noplan/',
+  shareTail:'$NOPLAN — there is no plan.',
+},
+ru: {
+  whisper:'вход в пустоту', live:'живое дерево',
+  h1:'Плана нет. <b>Только дерево.</b>', sub:'каждая сделка становится веткой',
+  mcap:'капа', price:'цена', holders:'холдеры', copy:'копировать', copied:'скопировано',
+  hint:'тяни, чтобы исследовать · колесо / щипок — зум · клик по узлу — подлёт · двойной клик — назад',
+  dns:'◈ найдены ton dns', chart:'График',
+  navBranch:'◈ Твоя ветка', navChron:'❖ Хроника', navProph:'☾ Пророчество',
+  bTitle:'◈ Твоя ветка', bDesc:'Каждый кошелёк — ветка дерева. Найди свою: введи TON-адрес или имя .ton.',
+  bPh:'UQ… / EQ… / имя.ton', bGo:'найти',
+  bAsk:'спрашиваем дерево…', bRings:'читаем твои кольца…', bUnknown:'дерево не знает этого имени.',
+  bEmpty:'в этом кошельке нет $NOPLAN — дерево ждёт.',
+  bBal:'баланс', bPct:'% от саплая', bDays:'держит уже', bRank:'ранг холдера',
+  badgeNone:'ещё не холдер', badgeDia:'◆ алмазные руки — ни разу не продал', badgeHold:'холдер — руки торговали',
+  days:'дн.', bFly:'⤴ к моей ветке', bSave:'сохранить карту', bShare:'поделиться',
+  lblDia:'алмазные руки', lblHold:'холдер', lblNone:'ещё не выросла',
+  cardTag:'ПЛАНА НЕТ. ТОЛЬКО ДЕРЕВО.',
+  cardNone:'ВЕТКА ЕЩЁ НЕ ВЫРОСЛА', cardHold:'ХОЛДЕР ДЕРЕВА', cardDia:'◆ АЛМАЗНЫЕ РУКИ — НИ РАЗУ НЕ ПРОДАЛ',
+  cardSupply:'САПЛАЯ', cardHolding:'ДЕРЖИТ', cardDays:'ДН.', cardUnrooted:'БЕЗ КОРНЯ', cardRank:'РАНГ',
+  chTitle:'❖ Хроника Хаоса',
+  chDesc:'Вся ончейн-история $NOPLAN, прочитанная прямо из леджера TON. Ни архива, ни базы — помнит только цепь.',
+  chOpening:'открываем леджер…', chDig:'раскапываем цепь…', chFound:'трансферов найдено',
+  chFail:'хроника сопротивляется. попробуй позже.', chNone:'в цепи ещё нет сделок.',
+  chAge:'возраст дерева', chTrades:'всего сделок', chBS:'покупки / продажи', chWal:'кошельков', chVol:'объём', chBig:'крупнейшая покупка',
+  ogHd:'⛧ первые десять — OG дерева', chReplay:'▶ реплей генезиса',
+  replayS:'реплей генезиса — вся история дерева',
+  pTitle:'☾ Пророчество дня',
+  pDesc:'Написано никем. Выведено из сегодняшней даты и самого контракта — одни и те же слова для каждого верующего, всюду, весь день.',
+  pSave:'сохранить сигил', pCopy:'скопировать пророчество', pShare:'поделиться', pCopied:'пророчество скопировано',
+  pHead:'ПРОРОЧЕСТВО ДНЯ', noPlan:'Плана нет.',
+  shareBranch:'моя ветка дерева $NOPLAN — плана нет. https://noplangram.github.io/noplan/',
+  shareTail:'$NOPLAN — плана нет.',
+}};
+let LANG = localStorage.getItem('noplan_lang')
+  || (((navigator.language||'').toLowerCase().startsWith('ru')) ? 'ru' : 'en');
+const tt = k => (I18N[LANG] && I18N[LANG][k]) || I18N.en[k] || k;
+
+function applyLang(){
+  document.documentElement.lang = LANG;
+  const q = s => document.querySelector(s);
+  q('#veil .whisper').textContent = tt('whisper');
+  q('#live span').textContent = tt('live');
+  q('#tagline h1').innerHTML = tt('h1');
+  q('#tagline p').textContent = tt('sub');
+  const st = document.querySelectorAll('#stats > span');
+  st[0].childNodes[0].nodeValue = tt('mcap')+' ';
+  st[1].childNodes[0].nodeValue = tt('price')+' ';
+  st[2].childNodes[0].nodeValue = tt('holders')+' ';
+  q('#ca .cp').textContent = tt('copy');
+  q('.hint').textContent = tt('hint');
+  q('#dnspanel .hd').textContent = tt('dns');
+  q('a.btn.ghost[href*="dexscreener"]').textContent = tt('chart');
+  q('.pnav[data-p="branch"]').textContent = tt('navBranch');
+  q('.pnav[data-p="chron"]').textContent = tt('navChron');
+  q('.pnav[data-p="proph"]').textContent = tt('navProph');
+  q('#p-branch h2').textContent = tt('bTitle');
+  q('#p-branch .pdesc').textContent = tt('bDesc');
+  document.getElementById('baddr').placeholder = tt('bPh');
+  document.getElementById('bgo').textContent = tt('bGo');
+  const bl = document.querySelectorAll('#p-branch .sg .l');
+  bl[0].textContent = tt('bBal'); bl[1].textContent = tt('bPct');
+  bl[2].textContent = tt('bDays'); bl[3].textContent = tt('bRank');
+  document.getElementById('bfly').textContent = tt('bFly');
+  document.getElementById('bsave').textContent = tt('bSave');
+  document.getElementById('bshare').textContent = tt('bShare');
+  q('#p-chron h2').textContent = tt('chTitle');
+  q('#p-chron .pdesc').textContent = tt('chDesc');
+  const cl = document.querySelectorAll('#p-chron .sg .l');
+  cl[0].textContent = tt('chAge'); cl[1].textContent = tt('chTrades');
+  cl[2].textContent = tt('chBS');  cl[3].textContent = tt('chWal');
+  cl[4].textContent = tt('chVol'); cl[5].textContent = tt('chBig');
+  q('.oghd').textContent = tt('ogHd');
+  document.getElementById('chreplay').textContent = tt('chReplay');
+  q('#p-proph h2').textContent = tt('pTitle');
+  q('#p-proph .pdesc').textContent = tt('pDesc');
+  document.getElementById('psave').textContent = tt('pSave');
+  document.getElementById('pcopy').textContent = tt('pCopy');
+  document.getElementById('pshare').textContent = tt('pShare');
+  q('#replaybar .s').textContent = tt('replayS');
+}
+
+const langBtn = document.getElementById('lang');
+function paintLang(){ langBtn.textContent = LANG === 'en' ? 'RU' : 'EN'; }
+langBtn.addEventListener('click', ()=>{
+  LANG = LANG === 'en' ? 'ru' : 'en';
+  localStorage.setItem('noplan_lang', LANG);
+  paintLang(); applyLang();
+  prophDay = null;
+  if (document.getElementById('p-proph').classList.contains('show')) prophecyOpen();
+  if (lastCard) renderBranchResult(lastCard);
+});
+paintLang(); applyLang();
+
 /* ---- Telegram Mini App mode ---- */
 try {
   const tg = window.Telegram && window.Telegram.WebApp;
@@ -1004,7 +1141,7 @@ try {
 const panelIds = ['branch','chron','proph'];
 function openPanel(k){
   panelIds.forEach(p => document.getElementById('p-'+p).classList.toggle('show', p===k));
-  if (k==='chron') chronOpen();
+  if (k==='chron'){ if (!chron) document.getElementById('chstate').textContent = tt('chOpening'); chronOpen(); }
   if (k==='proph') prophecyOpen();
 }
 function closePanels(){ panelIds.forEach(p => document.getElementById('p-'+p).classList.remove('show')); }
@@ -1024,7 +1161,7 @@ async function findMyBranch(){
   const q = bIn.value.trim();
   if (!q) return;
   document.getElementById('bres').style.display = 'none';
-  bMsg.textContent = 'asking the tree…';
+  bMsg.textContent = tt('bAsk');
   try {
     let addr = q, display = null;
     if (/\./.test(q) && !/^(EQ|UQ|0:|kQ)/i.test(q)){
@@ -1039,7 +1176,7 @@ async function findMyBranch(){
     let bal = 0;
     try { const jb = await tapi(`/accounts/${addr}/jettons/${CA}`); bal = Number(jb.balance)/1e9; } catch(e){}
 
-    bMsg.textContent = 'reading your rings…';
+    bMsg.textContent = tt('bRings');
     let firstTs = null, everSold = false;
     try {
       const r = await fetch(`https://toncenter.com/api/v3/jetton/transfers?jetton_master=${CA}&address=${addr}&limit=250&sort=asc`);
@@ -1063,7 +1200,7 @@ async function findMyBranch(){
     lastCard = { addr, display, bal, pct, days, everSold, rank, firstTs };
     renderBranchResult(lastCard);
     growMyBranch(lastCard);
-    bMsg.textContent = bal > 0 ? '' : 'this wallet holds no $NOPLAN — the tree awaits.';
+    bMsg.textContent = bal > 0 ? '' : tt('bEmpty');
     resolveDNS(addr, name => {
       if (name && lastCard && lastCard.addr === addr && lastCard.display !== name){
         lastCard.display = name;
@@ -1072,7 +1209,7 @@ async function findMyBranch(){
       }
     });
   } catch(e){
-    bMsg.textContent = 'the tree does not know this name.';
+    bMsg.textContent = tt('bUnknown');
   }
 }
 
@@ -1080,12 +1217,12 @@ function renderBranchResult(d){
   document.getElementById('bres').style.display = 'block';
   document.getElementById('bname').textContent = d.display;
   const b = document.getElementById('bbadge');
-  if (d.bal <= 0)        b.innerHTML = '<span class="badge paper">not a holder — yet</span>';
-  else if (!d.everSold)  b.innerHTML = '<span class="badge diamond">◆ diamond hands — never sold</span>';
-  else                   b.innerHTML = '<span class="badge paper">holder — the hands have traded</span>';
+  if (d.bal <= 0)        b.innerHTML = `<span class="badge paper">${tt('badgeNone')}</span>`;
+  else if (!d.everSold)  b.innerHTML = `<span class="badge diamond">${tt('badgeDia')}</span>`;
+  else                   b.innerHTML = `<span class="badge paper">${tt('badgeHold')}</span>`;
   document.getElementById('bbal').textContent  = d.bal > 0 ? fmt(d.bal) : '0';
   document.getElementById('bpct').textContent  = d.pct ? (d.pct < 0.001 ? '<0.001%' : d.pct.toFixed(3)+'%') : '—';
-  document.getElementById('bdays').textContent = d.firstTs ? Math.floor(d.days)+' days' : '—';
+  document.getElementById('bdays').textContent = d.firstTs ? Math.floor(d.days)+' '+tt('days') : '—';
   document.getElementById('brank').textContent = d.rank ? '#'+d.rank : (d.bal > 0 ? '#100+' : '—');
   drawBranchCard(d);
 }
@@ -1108,18 +1245,17 @@ function drawBranchCard(d){
     for (let i=0;i<n;i++) br(nx,ny, ang+(rnd()-.5)*1.5, len*(.64+rnd()*.2), w*.68, dep-1);
   })(540, 960, -Math.PI/2, 150+rnd()*40, 16, 7);
   x.globalAlpha = 1;
-  lsText(x, 'THERE IS NO PLAN. ONLY THE TREE.', '300 26px Segoe UI, sans-serif', '#6f6a5c', 540, 112, 10);
+  lsText(x, tt('cardTag'), '300 26px Segoe UI, sans-serif', '#6f6a5c', 540, 112, 10);
   lsText(x, '$NOPLAN', '700 64px Segoe UI, sans-serif', '#F2C41D', 540, 186, 10);
   let nameSize = 52;
   x.font = `400 ${nameSize}px Consolas, monospace`;
   while (x.measureText(d.display).width > 940 && nameSize > 24){ nameSize -= 4; x.font = `400 ${nameSize}px Consolas, monospace`; }
   lsText(x, d.display, `400 ${nameSize}px Consolas, monospace`, '#F2C41D', 540, 1042, 2);
-  const badge = d.bal <= 0 ? 'A BRANCH NOT YET GROWN'
-    : d.everSold ? 'HOLDER OF THE TREE' : '◆ DIAMOND HANDS — NEVER SOLD';
+  const badge = d.bal <= 0 ? tt('cardNone') : d.everSold ? tt('cardHold') : tt('cardDia');
   lsText(x, badge, '600 27px Segoe UI, sans-serif', d.everSold || d.bal<=0 ? '#a79f8b' : '#F2C41D', 540, 1100, 6);
   const pctTxt = d.pct ? (d.pct < 0.001 ? '<0.001' : d.pct.toFixed(3)) : '0';
-  lsText(x, `${fmt(d.bal)} $NOPLAN  ·  ${pctTxt}% OF SUPPLY`, '400 30px Consolas, monospace', '#d8d2c2', 540, 1162, 2);
-  const l2 = `${d.firstTs ? 'HOLDING '+Math.floor(d.days)+' DAYS' : 'UNROOTED'}  ·  RANK ${d.rank ? '#'+d.rank : (d.bal>0?'#100+':'—')}`;
+  lsText(x, `${fmt(d.bal)} $NOPLAN  ·  ${pctTxt}% ${tt('cardSupply')}`, '400 30px Consolas, monospace', '#d8d2c2', 540, 1162, 2);
+  const l2 = `${d.firstTs ? tt('cardHolding')+' '+Math.floor(d.days)+' '+tt('cardDays') : tt('cardUnrooted')}  ·  ${tt('cardRank')} ${d.rank ? '#'+d.rank : (d.bal>0?'#100+':'—')}`;
   lsText(x, l2, '400 30px Consolas, monospace', '#d8d2c2', 540, 1214, 2);
   lsText(x, 'noplangram.github.io/noplan', '400 24px Consolas, monospace', '#6f6a5c', 540, 1292, 5);
 }
@@ -1153,7 +1289,7 @@ function growMyBranch(d){
   const core = new THREE.Mesh(new THREE.CylinderGeometry(.16,.34,.44,4,1),
     new THREE.MeshStandardMaterial({ color:idColor, emissive:idColor, emissiveIntensity:.75, roughness:.4, metalness:.4 }));
   core.position.copy(tip); g.add(core);
-  const label = makeLabel('◈ '+d.display, '#F2C41D', d.bal <= 0 ? 'not yet grown' : d.everSold ? 'holder' : 'diamond hands');
+  const label = makeLabel('◈ '+d.display, '#F2C41D', d.bal <= 0 ? tt('lblNone') : d.everSold ? tt('lblHold') : tt('lblDia'));
   label.position.copy(tip).add(new THREE.Vector3(0,1.6,0));
   g.add(label);
   tree.add(g); myBranch = g; myBranchTip = tip.clone();
@@ -1166,8 +1302,7 @@ document.getElementById('bfly').addEventListener('click', ()=>{
 });
 document.getElementById('bsave').addEventListener('click', ()=> saveCanvas(document.getElementById('cardcv'), 'noplan-branch.png'));
 document.getElementById('bshare').addEventListener('click', ()=>
-  shareCanvas(document.getElementById('cardcv'), 'noplan-branch.png',
-    'my branch of the $NOPLAN tree — there is no plan. https://noplangram.github.io/noplan/'));
+  shareCanvas(document.getElementById('cardcv'), 'noplan-branch.png', tt('shareBranch')));
 
 /* ================= CHRONICLE OF CHAOS =================
    full jetton-transfer history from TONcenter v3 (indexed from genesis).
@@ -1189,7 +1324,7 @@ async function chronOpen(){
     try { localStorage.setItem('noplan_chron_v1', JSON.stringify(chron)); } catch(e){}
     renderChron();
   } catch(e){
-    st.textContent = chron ? '' : 'the chronicle resists. try again later.';
+    st.textContent = chron ? '' : tt('chFail');
   }
   chronLoading = false;
 }
@@ -1198,7 +1333,7 @@ async function excavate(st, prev){
   const xf = prev ? [...prev.xf] : [];
   let offset = prev ? (prev.off || 0) : 0;
   for (let page=0; page<80; page++){
-    st.textContent = `excavating the chain… ${xf.length} transfers unearthed`;
+    st.textContent = `${tt('chDig')} ${xf.length} ${tt('chFound')}`;
     const r = await fetch(`https://toncenter.com/api/v3/jetton/transfers?jetton_master=${CA}&limit=250&offset=${offset}&sort=asc`);
     if (!r.ok){ if (r.status === 429){ await sleep(3200); page--; continue; } break; }
     const t = ((await r.json()).jetton_transfers) || [];
@@ -1237,7 +1372,7 @@ function renderChron(){
   if (!chron) return;
   const T = deriveTrades(chron.xf);
   chron.trades = T;
-  if (!T.length){ st.textContent = 'no trades carved into the chain yet.'; return; }
+  if (!T.length){ st.textContent = tt('chNone'); return; }
   st.textContent = '';
   document.getElementById('chbody').style.display = 'block';
   const set = (id,v)=> document.getElementById(id).textContent = v;
@@ -1316,30 +1451,36 @@ const P2 = ['does not ask for','remembers','never counts','grows through','forgi
 const P3 = ['permission','the red candles','your entry price','the roadmap that never was','those who sold','the next block','gravity','the plan','the paper hands','the noise','the exit','tomorrow','the floor','the top','the calendar','the market makers'];
 const P4 = ['What was sold in fear returns as a branch for someone braver.','A wallet that sleeps is still a wallet that holds.','The chart is a shadow; the tree is the thing itself.','No one waters it. That is why it grows.','Every dip is the root reaching deeper.','The block does not hurry, and yet everything is confirmed.','Those who ask when have already answered why not.','A branch cut in panic feeds the soil of the patient.','The whale moves in silence; the tree hears everything.','Green and red are the same color to the root.','What the paper hands release, the golden dust remembers.','The plan you are waiting for was never written.','Hold the branch and the branch holds back.','The tree grew last night while you checked the price.','Zero is far below the roots. It cannot reach.','The next ring forms whether you watch or not.'];
 const P5 = ['Only the tree.','Only the climb.','Only the golden dust.','The tree already knows.','Only the next branch.','Only holders and wind.','The root decides.','Only the sap flowing upward.','Only rings inside rings.','And that is the plan.','Only what grows in the dark.','Only the ledger and the light.'];
+const R1 = ['Дерево','Золотой корень','Пустота','Сотая ветка','Молчаливый кит','Пыль графика','Первый покупатель','Свеча, которой ты боялся','Незримый садовник','Старейшее кольцо','Сломанная ветка','Сок','Семя под полом','Крона','Тень фитиля','Следующий блок'];
+const R2 = ['не просит','помнит','не считает','прорастает сквозь','прощает','пожирает','переживёт','игнорирует','шепчет про','никогда не обещало','пьёт','несёт','не боится','не отвечает даже перед','благословляет','выдержит'];
+const R3 = ['разрешения','красные свечи','твою цену входа','дорожную карту, которой не было','тех, кто продал','следующий блок','гравитацию','план','бумажные руки','шум','выход','завтра','дно','вершину','календарь','маркетмейкеров'];
+const R4 = ['Проданное в страхе возвращается веткой для того, кто смелее.','Спящий кошелёк — всё ещё кошелёк, который держит.','График — лишь тень; дерево — сама суть.','Его никто не поливает. Поэтому оно растёт.','Каждый дип — это корень, уходящий глубже.','Блок не спешит, и всё же всё подтверждается.','Кто спрашивает «когда», уже ответил «почему бы и нет».','Ветка, срезанная в панике, питает почву терпеливых.','Кит движется в тишине; дерево слышит всё.','Для корня зелёный и красный — один цвет.','Что отпустили бумажные руки, то запомнит золотая пыль.','План, которого ты ждёшь, никогда не был написан.','Держи ветку — и ветка удержит тебя.','Дерево выросло этой ночью, пока ты проверял цену.','Ноль далеко под корнями. Ему не дотянуться.','Следующее кольцо появится, смотришь ты или нет.'];
+const R5 = ['Только дерево.','Только рост.','Только золотая пыль.','Дерево уже знает.','Только следующая ветка.','Только холдеры и ветер.','Корень решает.','Только сок, текущий вверх.','Только кольца в кольцах.','И это и есть план.','Только то, что растёт в темноте.','Только леджер и свет.'];
 const RUNES = ['✦','◈','☾','♄','☿','♆','✧','❖','⚚','☉','✶','◇'];
 
 let prophDay = null, prophLines = null;
 
 async function prophecyOpen(){
   const day = new Date().toISOString().slice(0,10);
-  if (prophDay === day) return;
+  if (prophDay === day + LANG) return;
   const bytes = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode('NOPLAN//'+day+'//'+CA)));
   const pick = (arr,i)=> arr[bytes[i] % arr.length];
+  const [B1,B2,B3,B4,B5] = LANG === 'ru' ? [R1,R2,R3,R4,R5] : [P1,P2,P3,P4,P5];
   prophLines = [
-    `${pick(P1,0)} ${pick(P2,1)} ${pick(P3,2)}.`,
-    pick(P4,3),
-    `There is no plan. ${pick(P5,4)}`
+    `${pick(B1,0)} ${pick(B2,1)} ${pick(B3,2)}.`,
+    pick(B4,3),
+    `${tt('noPlan')} ${pick(B5,4)}`
   ];
   drawSigil(bytes, prophLines, day);
   document.getElementById('prophtxt').textContent = prophLines.join('\n');
-  prophDay = day;
+  prophDay = day + LANG;
 }
 
 function drawSigil(b, lines, day){
   const cv = document.getElementById('prophcv'); cv.width = 1080; cv.height = 1350;
   const x = cv.getContext('2d');
   cardFrame(x);
-  lsText(x, 'DAILY PROPHECY', '300 30px Segoe UI, sans-serif', '#6f6a5c', 540, 118, 14);
+  lsText(x, tt('pHead'), '300 30px Segoe UI, sans-serif', '#6f6a5c', 540, 118, 14);
   lsText(x, day, '400 40px Consolas, monospace', '#F2C41D', 540, 178, 8);
   const cx0 = 540, cy0 = 590, R = 300;
   const grad = x.createRadialGradient(cx0,cy0,0,cx0,cy0,R);
@@ -1413,8 +1554,8 @@ document.getElementById('pshare').addEventListener('click', ()=>
 document.getElementById('pcopy').addEventListener('click', async ()=>{
   if (!prophLines) return;
   try {
-    await navigator.clipboard.writeText(prophLines.join('\n') + '\n\n$NOPLAN — there is no plan.\nhttps://noplangram.github.io/noplan/');
-    showToast('prophecy copied');
+    await navigator.clipboard.writeText(prophLines.join('\n') + '\n\n' + tt('shareTail') + '\nhttps://noplangram.github.io/noplan/');
+    showToast(tt('pCopied'));
   } catch(e){}
 });
 </script>
