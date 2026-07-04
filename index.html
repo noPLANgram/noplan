@@ -896,6 +896,7 @@ async function pumpDNS(){
 
 function registerTrade(tr, animate){
   if (replaying) return;                    // genesis replay owns the tree
+  if (chronSeeded && tr.ts && tr.ts/1000 <= lastChronTs) return;   // already grown from the chronicle
   if (!tr.hash || seen.has(tr.hash)) return;
   seen.add(tr.hash);
   txTotal++; countEl.textContent = txTotal;
@@ -974,8 +975,7 @@ document.getElementById('ca').addEventListener('click', async ()=>{
 
 /* ============ boot ============ */
 setTimeout(()=> document.getElementById('veil').classList.add('gone'), 1900);
-poll();
-setInterval(poll, POLL_MS);
+/* live polling starts after the tree is grown from the full chronicle — see bottom of this script */
 pollStats();
 setInterval(pollStats, 45000);
 setTimeout(scanHolders, 4000);
@@ -1358,11 +1358,11 @@ async function chronOpen(){
   const st = document.getElementById('chstate');
   try {
     if (!chron){
-      try { const c = JSON.parse(localStorage.getItem('noplan_chron_v1')); if (c && c.xf) chron = c; } catch(e){}
+      try { const c = JSON.parse(localStorage.getItem('noplan_chron_v2')); if (c && c.xf) chron = c; } catch(e){}
       if (chron) renderChron();
     }
     chron = await excavate(st, chron);
-    try { localStorage.setItem('noplan_chron_v1', JSON.stringify(chron)); } catch(e){}
+    try { localStorage.setItem('noplan_chron_v2', JSON.stringify(chron)); } catch(e){}
     renderChron();
   } catch(e){
     st.textContent = chron ? '' : tt('chFail');
@@ -1380,7 +1380,7 @@ async function excavate(st, prev){
     const t = ((await r.json()).jetton_transfers) || [];
     for (const x of t){
       if (x.transaction_aborted) continue;
-      xf.push({ ts:x.transaction_now, amt:Number(x.amount)/1e9,
+      xf.push({ ts:x.transaction_now, amt:Number(x.amount)/1e9, h:x.transaction_hash || null,
         s:(x.source||'').toLowerCase(), d:(x.destination||'').toLowerCase() });
     }
     offset += t.length;
@@ -1403,7 +1403,7 @@ function deriveTrades(xf){
     const isBuy = x.s === vault, isSell = x.d === vault;
     if (!isBuy && !isSell) continue;              // plain wallet-to-wallet gift
     if (x.amt > tokenSupply*0.1) continue;        // liquidity operations, not trades
-    trades.push({ ts:x.ts, k:isBuy?'b':'s', tok:x.amt, a:isBuy?x.d:x.s });
+    trades.push({ ts:x.ts, k:isBuy?'b':'s', tok:x.amt, a:isBuy?x.d:x.s, h:x.h });
   }
   return trades;
 }
@@ -1600,6 +1600,64 @@ document.getElementById('pcopy').addEventListener('click', async ()=>{
     showToast(tt('pCopied'));
   } catch(e){}
 });
+
+/* ================= GROW FROM GENESIS =================
+   the live tree seeds itself from the FULL on-chain chronicle,
+   not just the recent trades window. GeckoTerminal then only
+   appends what happens after the chronicle's last block. */
+let chronSeeded = false, lastChronTs = 0;
+
+function b64hex(b){
+  if (/^[0-9a-fA-F]{64}$/.test(b)) return b.toLowerCase();
+  try { return [...atob(b)].map(c => c.charCodeAt(0).toString(16).padStart(2,'0')).join(''); }
+  catch(e){ return null; }
+}
+
+async function seedFromChronicle(){
+  await chronOpen();
+  const T = chron && chron.trades ? chron.trades : [];
+  if (!T.length) return;
+  lastChronTs = T[T.length-1].ts;
+  chronSeeded = true;
+  seeded = true;                          // poll() must not run its own first-load cascade
+  txTotal = T.length; countEl.textContent = txTotal;
+  liveEl.classList.add('on');
+
+  // feed: the 60 most recent, oldest prepended first so newest ends on top
+  for (const tr of T.slice(-60)){
+    const kind = tr.k === 'b' ? 'buy' : 'sell';
+    const a = document.createElement('a');
+    a.className = 'tx ' + kind;
+    const hx = tr.h ? b64hex(tr.h) : null;
+    a.href = hx ? 'https://tonviewer.com/transaction/' + hx : 'https://tonviewer.com/' + tr.a;
+    a.target = '_blank'; a.rel = 'noopener';
+    a.innerHTML = `<span class="k">${kind==='buy'?'▲ BUY':'▼ SELL'}</span><span>${fmt(tr.tok)}</span><span class="who">${short(tr.a)}</span>`;
+    const whoEl = a.querySelector('.who');
+    if (tr.a && whoEl) whoEl.style.color = '#' + colorFor(tr.a).getHexString();
+    feedEl.prepend(a);
+  }
+  while (feedEl.children.length > 120) feedEl.removeChild(feedEl.lastChild);
+  T.slice(-25).forEach(tr => tr.a && resolveDNS(tr.a, name => { if (name) addDnsHit(tr.a, name, 'trader'); }, true));
+
+  // the whole history cascades into branches
+  const N = T.length;
+  T.forEach((tr,i)=>{
+    setTimeout(()=>{
+      if (replaying) return;
+      addBranch({ hash:'seed'+i, kind: tr.k==='b'?'buy':'sell',
+        usd:(tr.tok||0)*lastPrice,
+        label: i > N-25 ? `${fmt(tr.tok)} $NOPLAN` : null,
+        addr: tr.a, who: short(tr.a), ts: tr.ts*1000 });
+    }, 600 + i*90);
+  });
+}
+
+/* boot: full history first, live polling after */
+(async ()=>{
+  try { await seedFromChronicle(); } catch(e){}
+  poll();
+  setInterval(poll, POLL_MS);
+})();
 </script>
 </body>
 </html>
