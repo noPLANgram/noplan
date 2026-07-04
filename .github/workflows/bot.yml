@@ -1,0 +1,26 @@
+name: keeper
+
+on:
+  schedule:
+    - cron: '7 */5 * * *'   # a fresh keeper every 5 hours; it replaces the old one
+  workflow_dispatch:
+
+concurrency:
+  group: keeper
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node bot/worker.mjs
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          RUN_MINUTES: 345

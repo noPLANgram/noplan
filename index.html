@@ -141,8 +141,55 @@
   #snd:hover{border-color:rgba(242,196,29,.5);color:var(--gold)}
   #snd.on{color:var(--gold);box-shadow:0 0 14px rgba(242,196,29,.25)}
 
+  /* ---------- ritual panels (branch / chronicle / prophecy) ---------- */
+  .panel{position:fixed;z-index:40;left:50%;top:50%;transform:translate(-50%,-50%) scale(.97);
+    width:min(94vw,560px);max-height:84vh;overflow-y:auto;background:rgba(8,7,4,.94);
+    border:1px solid rgba(242,196,29,.35);border-radius:18px;padding:26px 26px 22px;
+    backdrop-filter:blur(14px);opacity:0;pointer-events:none;transition:.3s;scrollbar-width:thin;
+    scrollbar-color:rgba(242,196,29,.3) transparent}
+  .panel.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+  .panel h2{font-size:13px;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:12px}
+  .panel .x{position:absolute;top:14px;right:18px;color:#6f6a5c;cursor:pointer;font-size:16px}
+  .panel .x:hover{color:var(--gold)}
+  .pdesc{font-size:11px;letter-spacing:.12em;color:#8a8272;line-height:1.7;margin-bottom:14px}
+  .rinput{display:flex;gap:8px}
+  .rinput input{flex:1;min-width:0;background:rgba(0,0,0,.5);border:1px solid rgba(242,196,29,.25);border-radius:10px;
+    padding:11px 14px;color:var(--white);font-family:Consolas,monospace;font-size:13px;outline:none}
+  .rinput input:focus{border-color:rgba(242,196,29,.6)}
+  .pbtn{background:var(--gold);color:#0a0800;border:none;border-radius:10px;padding:11px 18px;
+    font-weight:700;letter-spacing:.18em;font-size:11px;text-transform:uppercase;cursor:pointer;transition:.25s}
+  .pbtn:hover{box-shadow:0 0 20px rgba(242,196,29,.35)}
+  .pbtn.ghost{background:transparent;border:1px solid rgba(242,196,29,.4);color:var(--gold)}
+  .pmsg{margin-top:12px;font-size:11px;letter-spacing:.16em;color:#8a8272;min-height:16px;text-transform:uppercase}
+  .bigname{font-family:Consolas,monospace;font-size:21px;color:var(--gold);margin-top:14px;word-break:break-all}
+  #bbadge{margin-top:9px}
+  .badge{display:inline-block;padding:5px 13px;border-radius:999px;font-size:10px;letter-spacing:.22em;text-transform:uppercase;border:1px solid}
+  .badge.diamond{color:var(--gold);border-color:rgba(242,196,29,.5);box-shadow:0 0 16px rgba(242,196,29,.2)}
+  .badge.paper{color:#a79f8b;border-color:rgba(167,159,139,.35)}
+  .sgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}
+  .sg{background:rgba(242,196,29,.05);border:1px solid rgba(242,196,29,.14);border-radius:10px;padding:9px 12px}
+  .sg .l{font-size:9px;letter-spacing:.26em;color:#7d7663;text-transform:uppercase}
+  .sg .v{margin-top:4px;font-size:14px;color:var(--white);font-family:Consolas,monospace}
+  .sharecv{width:100%;height:auto;border:1px solid rgba(242,196,29,.2);border-radius:12px;margin-top:16px;background:#050505;display:block}
+  .prow{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+  .prophtxt{margin-top:12px;font-family:Georgia,serif;font-size:14px;line-height:1.85;color:#d8d2c2;white-space:pre-wrap}
+  .oghd{margin-top:18px;font-size:10px;letter-spacing:.3em;color:#7d7663;text-transform:uppercase}
+  .oglist{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+  .og{display:flex;justify-content:space-between;gap:10px;font-family:Consolas,monospace;font-size:11.5px;color:#c9c3b2;
+    background:rgba(242,196,29,.04);border-radius:8px;padding:7px 10px}
+  .og b{color:var(--gold);font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .og span:last-child{color:#7d7663;flex:none}
+  #replaybar{position:fixed;z-index:30;left:50%;top:15%;transform:translateX(-50%);text-align:center;display:none;pointer-events:none}
+  #replaybar.show{display:block}
+  #replaybar .d{font-size:clamp(16px,3.4vw,26px);letter-spacing:.3em;color:var(--gold);font-family:Consolas,monospace;
+    text-shadow:0 0 24px rgba(242,196,29,.5)}
+  #replaybar .s{margin-top:7px;font-size:10px;letter-spacing:.4em;color:#7d7663;text-transform:uppercase}
+  button.btn{background:transparent;cursor:pointer;font-family:inherit}
+
   @media (max-width:640px){
     .brand .sub{display:none}
+    .panel{padding:20px 16px 18px}
+    .row .btn{padding:8px 13px;letter-spacing:.16em}
     #feed{top:210px;bottom:160px;width:46vw}
     #dnspanel{top:210px;bottom:170px;width:44vw}
     #tagline h1{letter-spacing:.2em}
@@ -212,12 +259,84 @@
     <a class="btn tg" href="https://t.me/noplan_gram" target="_blank" rel="noopener">✦ Telegram</a>
     <a class="btn ghost" href="https://tonviewer.com/EQB3kSUC688buwPIwz34jX5KDB4O7naqlGLPoEAzB5LIh9qg" target="_blank" rel="noopener">Tonviewer</a>
     <a class="btn ghost" href="https://dexscreener.com/ton/EQDWnsxS1XujfKqchyRST4OScg4Fo92gECFBS7cOpXMRU_6C" target="_blank" rel="noopener">Chart</a>
+    <button class="btn ghost pnav" data-p="branch">◈ Your Branch</button>
+    <button class="btn ghost pnav" data-p="chron">❖ Chronicle</button>
+    <button class="btn ghost pnav" data-p="proph">☾ Prophecy</button>
   </div>
   <div class="hint">drag to explore · scroll / pinch to zoom · click a node to fly in · double-click to pull back</div>
 </footer>
 
+<!-- ritual panels -->
+<div class="panel" id="p-branch">
+  <span class="x">✕</span>
+  <h2>◈ Your Branch</h2>
+  <p class="pdesc">Every wallet is a branch of the tree. Find yours — enter a TON address or a .ton name.</p>
+  <div class="rinput">
+    <input id="baddr" placeholder="UQ… / EQ… / yourname.ton" spellcheck="false" autocomplete="off">
+    <button class="pbtn" id="bgo">find</button>
+  </div>
+  <div class="pmsg" id="bmsg"></div>
+  <div id="bres" style="display:none">
+    <div class="bigname" id="bname"></div>
+    <div id="bbadge"></div>
+    <div class="sgrid">
+      <div class="sg"><div class="l">balance</div><div class="v" id="bbal">—</div></div>
+      <div class="sg"><div class="l">% of supply</div><div class="v" id="bpct">—</div></div>
+      <div class="sg"><div class="l">holding for</div><div class="v" id="bdays">—</div></div>
+      <div class="sg"><div class="l">holder rank</div><div class="v" id="brank">—</div></div>
+    </div>
+    <canvas class="sharecv" id="cardcv"></canvas>
+    <div class="prow">
+      <button class="pbtn" id="bfly">⤴ fly to my branch</button>
+      <button class="pbtn ghost" id="bsave">save card</button>
+      <button class="pbtn ghost" id="bshare">share</button>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="p-chron">
+  <span class="x">✕</span>
+  <h2>❖ Chronicle of Chaos</h2>
+  <p class="pdesc">The full on-chain history of $NOPLAN, read straight from the TON ledger. No archive, no database — only the chain remembers.</p>
+  <div class="pmsg" id="chstate">opening the ledger…</div>
+  <div id="chbody" style="display:none">
+    <div class="sgrid">
+      <div class="sg"><div class="l">tree age</div><div class="v" id="chage">—</div></div>
+      <div class="sg"><div class="l">total trades</div><div class="v" id="chtrades">—</div></div>
+      <div class="sg"><div class="l">buys / sells</div><div class="v" id="chbuys">—</div></div>
+      <div class="sg"><div class="l">wallets touched</div><div class="v" id="chwallets">—</div></div>
+      <div class="sg"><div class="l">volume</div><div class="v" id="chvol">—</div></div>
+      <div class="sg"><div class="l">biggest buy</div><div class="v" id="chbig">—</div></div>
+    </div>
+    <div class="oghd">⛧ the first ten — OGs of the tree</div>
+    <div class="oglist" id="oglist"></div>
+    <div class="prow">
+      <button class="pbtn" id="chreplay">▶ replay genesis</button>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="p-proph">
+  <span class="x">✕</span>
+  <h2>☾ Daily Prophecy</h2>
+  <p class="pdesc">Written by no one. Derived from today's date and the contract itself — the same words for every believer, everywhere, all day.</p>
+  <canvas class="sharecv" id="prophcv"></canvas>
+  <pre class="prophtxt" id="prophtxt"></pre>
+  <div class="prow">
+    <button class="pbtn ghost" id="psave">save sigil</button>
+    <button class="pbtn ghost" id="pcopy">copy prophecy</button>
+    <button class="pbtn ghost" id="pshare">share</button>
+  </div>
+</div>
+
+<div id="replaybar">
+  <div class="d" id="rdate"></div>
+  <div class="s">replaying genesis — the whole history of the tree</div>
+</div>
+
 <div id="toast">copied</div>
 
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
 "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
@@ -677,8 +796,10 @@ async function scanHolders(){
 
 /* ---- market stats (mcap / price / holders) ---- */
 let tokenSupply = 1e8; // 100M fallback; refined from API below
+let lastPrice = 0;     // last known usd price per token
 function setPriceMcap(price, flash){
   if (!price) return;
+  lastPrice = price;
   const mcapEl = document.getElementById('mcap');
   const priceEl = document.getElementById('price');
   mcapEl.textContent = '$' + fmt(price * tokenSupply);
@@ -731,6 +852,7 @@ async function pumpDNS(){
 }
 
 function registerTrade(tr, animate){
+  if (replaying) return;                    // genesis replay owns the tree
   if (!tr.hash || seen.has(tr.hash)) return;
   seen.add(tr.hash);
   txTotal++; countEl.textContent = txTotal;
@@ -813,6 +935,488 @@ pollStats();
 setInterval(pollStats, 45000);
 setTimeout(scanHolders, 4000);
 setInterval(scanHolders, 300000);
+
+/* ==================================================================
+   COMMUNITY RITUALS — Your Branch · Chronicle of Chaos · Daily Prophecy
+   + Telegram Mini App mode. all client-side, all from the chain.
+   ================================================================== */
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+async function tapi(path){
+  const r = await fetch('https://tonapi.io/v2'+path);
+  if (!r.ok) throw new Error('tonapi '+r.status);
+  return r.json();
+}
+async function tapiRetry(path, tries=3){
+  for (let i=0;i<tries;i++){
+    try { return await tapi(path); }
+    catch(e){ if (i===tries-1) throw e; await sleep(2200*(i+1)); }
+  }
+}
+function hashSeed(s){ let h=2166136261; for (let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1400);
+}
+function saveCanvas(cv, name){
+  cv.toBlob(b=>{
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(b); a.download = name; a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 5000);
+  }, 'image/png');
+}
+async function shareCanvas(cv, name, text){
+  try {
+    const b = await new Promise(r=>cv.toBlob(r,'image/png'));
+    const f = new File([b], name, { type:'image/png' });
+    if (navigator.canShare && navigator.canShare({ files:[f] })){
+      await navigator.share({ files:[f], text });
+      return;
+    }
+  } catch(e){ if (e && e.name === 'AbortError') return; }
+  saveCanvas(cv, name);
+}
+function lsText(x, txt, font, color, cx, cy, ls, align){
+  x.font = font; x.fillStyle = color; x.textAlign = align || 'center';
+  try { x.letterSpacing = (ls||0)+'px'; } catch(e){}
+  x.fillText(txt, cx, cy);
+  try { x.letterSpacing = '0px'; } catch(e){}
+}
+function cardFrame(x){
+  x.fillStyle = '#050505'; x.fillRect(0,0,1080,1350);
+  x.strokeStyle = 'rgba(242,196,29,.4)'; x.lineWidth = 2; x.strokeRect(28,28,1024,1294);
+  x.strokeStyle = 'rgba(242,196,29,.12)'; x.lineWidth = 1; x.strokeRect(40,40,1000,1270);
+}
+
+/* ---- Telegram Mini App mode ---- */
+try {
+  const tg = window.Telegram && window.Telegram.WebApp;
+  if (tg && tg.platform && tg.platform !== 'unknown'){
+    tg.ready(); tg.expand();
+    tg.setHeaderColor && tg.setHeaderColor('#050505');
+    tg.setBackgroundColor && tg.setBackgroundColor('#050505');
+    tg.disableVerticalSwipes && tg.disableVerticalSwipes();
+  }
+} catch(e){}
+
+/* ---- panels ---- */
+const panelIds = ['branch','chron','proph'];
+function openPanel(k){
+  panelIds.forEach(p => document.getElementById('p-'+p).classList.toggle('show', p===k));
+  if (k==='chron') chronOpen();
+  if (k==='proph') prophecyOpen();
+}
+function closePanels(){ panelIds.forEach(p => document.getElementById('p-'+p).classList.remove('show')); }
+document.querySelectorAll('.pnav').forEach(b => b.addEventListener('click', ()=> openPanel(b.dataset.p)));
+document.querySelectorAll('.panel .x').forEach(x => x.addEventListener('click', closePanels));
+addEventListener('keydown', e => { if (e.key === 'Escape') closePanels(); });
+
+/* ================= YOUR BRANCH ================= */
+const bIn = document.getElementById('baddr');
+const bMsg = document.getElementById('bmsg');
+let myBranch = null, myBranchTip = null, lastCard = null;
+
+document.getElementById('bgo').addEventListener('click', findMyBranch);
+bIn.addEventListener('keydown', e => { if (e.key === 'Enter') findMyBranch(); });
+
+async function findMyBranch(){
+  const q = bIn.value.trim();
+  if (!q) return;
+  document.getElementById('bres').style.display = 'none';
+  bMsg.textContent = 'asking the tree…';
+  try {
+    let addr = q, display = null;
+    if (/\./.test(q) && !/^(EQ|UQ|0:|kQ)/i.test(q)){
+      const d = await tapi('/dns/'+encodeURIComponent(q.toLowerCase())+'/resolve');
+      if (!d.wallet || !d.wallet.address) throw new Error('no wallet');
+      addr = d.wallet.address; display = q.toLowerCase();
+    }
+    const acc = await tapi('/accounts/'+encodeURIComponent(addr));
+    addr = acc.address;
+    if (!display) display = acc.name || short(q);
+
+    let bal = 0;
+    try { const jb = await tapi(`/accounts/${addr}/jettons/${CA}`); bal = Number(jb.balance)/1e9; } catch(e){}
+
+    bMsg.textContent = 'reading your rings…';
+    let firstTs = null, everSold = false;
+    try {
+      const r = await fetch(`https://toncenter.com/api/v3/jetton/transfers?jetton_master=${CA}&address=${addr}&limit=250&sort=asc`);
+      if (r.ok){
+        for (const t of ((await r.json()).jetton_transfers || [])){
+          if (t.transaction_aborted) continue;
+          if (!firstTs) firstTs = t.transaction_now;
+          if (t.source && t.source.toLowerCase() === addr.toLowerCase()) everSold = true;
+        }
+      }
+    } catch(e){}
+
+    let rank = null;
+    try {
+      const jr = await tapi(`/jettons/${CA}/holders?limit=100`);
+      (jr.addresses||[]).forEach((h,i)=>{ if (rank===null && h.owner && h.owner.address === addr) rank = i+1; });
+    } catch(e){}
+
+    const days = firstTs ? Math.max(0, (Date.now()/1000 - firstTs)/86400) : 0;
+    const pct = (tokenSupply && bal) ? bal/tokenSupply*100 : 0;
+    lastCard = { addr, display, bal, pct, days, everSold, rank, firstTs };
+    renderBranchResult(lastCard);
+    growMyBranch(lastCard);
+    bMsg.textContent = bal > 0 ? '' : 'this wallet holds no $NOPLAN — the tree awaits.';
+    resolveDNS(addr, name => {
+      if (name && lastCard && lastCard.addr === addr && lastCard.display !== name){
+        lastCard.display = name;
+        document.getElementById('bname').textContent = name;
+        drawBranchCard(lastCard);
+      }
+    });
+  } catch(e){
+    bMsg.textContent = 'the tree does not know this name.';
+  }
+}
+
+function renderBranchResult(d){
+  document.getElementById('bres').style.display = 'block';
+  document.getElementById('bname').textContent = d.display;
+  const b = document.getElementById('bbadge');
+  if (d.bal <= 0)        b.innerHTML = '<span class="badge paper">not a holder — yet</span>';
+  else if (!d.everSold)  b.innerHTML = '<span class="badge diamond">◆ diamond hands — never sold</span>';
+  else                   b.innerHTML = '<span class="badge paper">holder — the hands have traded</span>';
+  document.getElementById('bbal').textContent  = d.bal > 0 ? fmt(d.bal) : '0';
+  document.getElementById('bpct').textContent  = d.pct ? (d.pct < 0.001 ? '<0.001%' : d.pct.toFixed(3)+'%') : '—';
+  document.getElementById('bdays').textContent = d.firstTs ? Math.floor(d.days)+' days' : '—';
+  document.getElementById('brank').textContent = d.rank ? '#'+d.rank : (d.bal > 0 ? '#100+' : '—');
+  drawBranchCard(d);
+}
+
+function drawBranchCard(d){
+  const cv = document.getElementById('cardcv'); cv.width = 1080; cv.height = 1350;
+  const x = cv.getContext('2d');
+  const rnd = mulberry32(hashSeed(d.addr));
+  cardFrame(x);
+  x.strokeStyle = 'rgba(242,196,29,.07)'; x.lineWidth = 2;
+  for (let i=1;i<=7;i++){ x.beginPath(); x.arc(540,620,i*88,0,7); x.stroke(); }
+  x.lineCap = 'round'; x.strokeStyle = '#F2C41D';
+  (function br(px,py,ang,len,w,dep){
+    if (dep === 0 || len < 8) return;
+    const nx = px+Math.cos(ang)*len, ny = py+Math.sin(ang)*len;
+    x.globalAlpha = .22+.78*(w/16); x.lineWidth = w;
+    x.beginPath(); x.moveTo(px,py); x.lineTo(nx,ny); x.stroke();
+    if (dep === 1){ x.globalAlpha = .95; x.fillStyle = '#F2C41D'; x.beginPath(); x.arc(nx,ny,2.5+rnd()*3.5,0,7); x.fill(); }
+    const n = rnd() < .35 ? 3 : 2;
+    for (let i=0;i<n;i++) br(nx,ny, ang+(rnd()-.5)*1.5, len*(.64+rnd()*.2), w*.68, dep-1);
+  })(540, 960, -Math.PI/2, 150+rnd()*40, 16, 7);
+  x.globalAlpha = 1;
+  lsText(x, 'THERE IS NO PLAN. ONLY THE TREE.', '300 26px Segoe UI, sans-serif', '#6f6a5c', 540, 112, 10);
+  lsText(x, '$NOPLAN', '700 64px Segoe UI, sans-serif', '#F2C41D', 540, 186, 10);
+  let nameSize = 52;
+  x.font = `400 ${nameSize}px Consolas, monospace`;
+  while (x.measureText(d.display).width > 940 && nameSize > 24){ nameSize -= 4; x.font = `400 ${nameSize}px Consolas, monospace`; }
+  lsText(x, d.display, `400 ${nameSize}px Consolas, monospace`, '#F2C41D', 540, 1042, 2);
+  const badge = d.bal <= 0 ? 'A BRANCH NOT YET GROWN'
+    : d.everSold ? 'HOLDER OF THE TREE' : '◆ DIAMOND HANDS — NEVER SOLD';
+  lsText(x, badge, '600 27px Segoe UI, sans-serif', d.everSold || d.bal<=0 ? '#a79f8b' : '#F2C41D', 540, 1100, 6);
+  const pctTxt = d.pct ? (d.pct < 0.001 ? '<0.001' : d.pct.toFixed(3)) : '0';
+  lsText(x, `${fmt(d.bal)} $NOPLAN  ·  ${pctTxt}% OF SUPPLY`, '400 30px Consolas, monospace', '#d8d2c2', 540, 1162, 2);
+  const l2 = `${d.firstTs ? 'HOLDING '+Math.floor(d.days)+' DAYS' : 'UNROOTED'}  ·  RANK ${d.rank ? '#'+d.rank : (d.bal>0?'#100+':'—')}`;
+  lsText(x, l2, '400 30px Consolas, monospace', '#d8d2c2', 540, 1214, 2);
+  lsText(x, 'noplangram.github.io/noplan', '400 24px Consolas, monospace', '#6f6a5c', 540, 1292, 5);
+}
+
+function growMyBranch(d){
+  if (myBranch){ tree.remove(myBranch); myBranch = null; }
+  const g = new THREE.Group();
+  const rnd = mulberry32(hashSeed(d.addr));
+  const idColor = colorFor(d.addr);
+  const baseAng = rnd()*Math.PI*2;
+  let p = rootPos.clone(), dir = new THREE.Vector3(Math.cos(baseAng)*.8, 1.25, Math.sin(baseAng)*.8).normalize();
+  const pts = [p.clone()];
+  const segs = 6 + Math.floor(rnd()*3);
+  for (let i=0;i<segs;i++){
+    dir = dir.clone().add(new THREE.Vector3((rnd()-.5)*.9, .3+rnd()*.25, (rnd()-.5)*.9)).normalize();
+    p = p.clone().addScaledVector(dir, 2.2 + rnd()*1.6);
+    pts.push(p.clone());
+  }
+  const curve = new THREE.CatmullRomCurve3(pts);
+  g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(curve.getPoints(80)),
+    new THREE.LineBasicMaterial({ color:GOLD, transparent:true, opacity:.95 })));
+  for (let i=0;i<4;i++){
+    const a = curve.getPoint(.3 + i*.16);
+    const b2 = a.clone().add(new THREE.Vector3((rnd()-.5)*3, (.5+rnd())*1.6, (rnd()-.5)*3));
+    g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([a,b2]),
+      new THREE.LineBasicMaterial({ color:GOLD, transparent:true, opacity:.4 })));
+  }
+  const tip = pts[pts.length-1];
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map:GLOW, color:idColor, transparent:true, opacity:.85, depthWrite:false, blending:THREE.AdditiveBlending }));
+  glow.scale.setScalar(4.2); glow.position.copy(tip); g.add(glow);
+  const core = new THREE.Mesh(new THREE.CylinderGeometry(.16,.34,.44,4,1),
+    new THREE.MeshStandardMaterial({ color:idColor, emissive:idColor, emissiveIntensity:.75, roughness:.4, metalness:.4 }));
+  core.position.copy(tip); g.add(core);
+  const label = makeLabel('◈ '+d.display, '#F2C41D', d.bal <= 0 ? 'not yet grown' : d.everSold ? 'holder' : 'diamond hands');
+  label.position.copy(tip).add(new THREE.Vector3(0,1.6,0));
+  g.add(label);
+  tree.add(g); myBranch = g; myBranchTip = tip.clone();
+}
+
+document.getElementById('bfly').addEventListener('click', ()=>{
+  if (!myBranchTip) return;
+  closePanels(); controls.autoRotate = false;
+  focus = { point: myBranchTip.clone(), dist: 8 };
+});
+document.getElementById('bsave').addEventListener('click', ()=> saveCanvas(document.getElementById('cardcv'), 'noplan-branch.png'));
+document.getElementById('bshare').addEventListener('click', ()=>
+  shareCanvas(document.getElementById('cardcv'), 'noplan-branch.png',
+    'my branch of the $NOPLAN tree — there is no plan. https://noplangram.github.io/noplan/'));
+
+/* ================= CHRONICLE OF CHAOS =================
+   full jetton-transfer history from TONcenter v3 (indexed from genesis).
+   buy = vault→wallet, sell = wallet→vault; the vault is simply the
+   address that appears in more transfers than anyone else. */
+let chron = null, chronLoading = false;
+
+async function chronOpen(){
+  if (chron) renderChron();
+  if (chronLoading || (chron && Date.now() - chron.at < 5*60*1000)) return;
+  chronLoading = true;
+  const st = document.getElementById('chstate');
+  try {
+    if (!chron){
+      try { const c = JSON.parse(localStorage.getItem('noplan_chron_v1')); if (c && c.xf) chron = c; } catch(e){}
+      if (chron) renderChron();
+    }
+    chron = await excavate(st, chron);
+    try { localStorage.setItem('noplan_chron_v1', JSON.stringify(chron)); } catch(e){}
+    renderChron();
+  } catch(e){
+    st.textContent = chron ? '' : 'the chronicle resists. try again later.';
+  }
+  chronLoading = false;
+}
+
+async function excavate(st, prev){
+  const xf = prev ? [...prev.xf] : [];
+  let offset = prev ? (prev.off || 0) : 0;
+  for (let page=0; page<80; page++){
+    st.textContent = `excavating the chain… ${xf.length} transfers unearthed`;
+    const r = await fetch(`https://toncenter.com/api/v3/jetton/transfers?jetton_master=${CA}&limit=250&offset=${offset}&sort=asc`);
+    if (!r.ok){ if (r.status === 429){ await sleep(3200); page--; continue; } break; }
+    const t = ((await r.json()).jetton_transfers) || [];
+    for (const x of t){
+      if (x.transaction_aborted) continue;
+      xf.push({ ts:x.transaction_now, amt:Number(x.amount)/1e9,
+        s:(x.source||'').toLowerCase(), d:(x.destination||'').toLowerCase() });
+    }
+    offset += t.length;
+    if (t.length < 250) break;
+    await sleep(1100);
+  }
+  return { xf, off:offset, at:Date.now() };
+}
+
+function deriveTrades(xf){
+  const freq = new Map();
+  for (const x of xf){
+    if (x.s) freq.set(x.s, (freq.get(x.s)||0)+1);
+    if (x.d) freq.set(x.d, (freq.get(x.d)||0)+1);
+  }
+  let vault = null, best = 0;
+  for (const [a,c] of freq) if (c > best){ best = c; vault = a; }
+  const trades = [];
+  for (const x of xf){
+    const isBuy = x.s === vault, isSell = x.d === vault;
+    if (!isBuy && !isSell) continue;              // plain wallet-to-wallet gift
+    if (x.amt > tokenSupply*0.1) continue;        // liquidity operations, not trades
+    trades.push({ ts:x.ts, k:isBuy?'b':'s', tok:x.amt, a:isBuy?x.d:x.s });
+  }
+  return trades;
+}
+
+function renderChron(){
+  const st = document.getElementById('chstate');
+  if (!chron) return;
+  const T = deriveTrades(chron.xf);
+  chron.trades = T;
+  if (!T.length){ st.textContent = 'no trades carved into the chain yet.'; return; }
+  st.textContent = '';
+  document.getElementById('chbody').style.display = 'block';
+  const set = (id,v)=> document.getElementById(id).textContent = v;
+  set('chage', Math.max(0, Math.floor((Date.now()/1000 - T[0].ts)/86400)) + 'd');
+  set('chtrades', T.length);
+  const buys = T.filter(t=>t.k==='b');
+  set('chbuys', buys.length + ' / ' + (T.length - buys.length));
+  set('chwallets', new Set(T.map(t=>t.a).filter(Boolean)).size);
+  const vol = T.reduce((s,t)=> s + (t.tok||0), 0);
+  set('chvol', fmt(vol) + (lastPrice ? ' · ~$' + fmt(vol*lastPrice) : ''));
+  const big = buys.slice().sort((p,q)=> q.tok - p.tok)[0];
+  set('chbig', big ? fmt(big.tok) + ' $NOPLAN' : '—');
+  const ogEl = document.getElementById('oglist'); ogEl.innerHTML = '';
+  const seenA = new Set(), ogs = [];
+  for (const t of T){
+    if (t.k === 'b' && t.a && !seenA.has(t.a)){ seenA.add(t.a); ogs.push(t); if (ogs.length >= 10) break; }
+  }
+  ogs.forEach((t,i)=>{
+    const d = document.createElement('div'); d.className = 'og';
+    d.innerHTML = `<span>#${i+1} <b class="ogname">${short(t.a)}</b></span><span>${new Date(t.ts*1000).toLocaleDateString()}</span>`;
+    ogEl.appendChild(d);
+    resolveDNS(t.a, n => { if (n) d.querySelector('.ogname').textContent = n; }, true);
+  });
+}
+
+/* ---- replay genesis: the tree regrows its whole history ---- */
+let replaying = false;
+const replayTimers = [];
+document.getElementById('chreplay').addEventListener('click', startReplay);
+
+function resetTree(){
+  for (const g of growing) tree.remove(g.ring);
+  growing.length = 0;
+  for (const L of labels) tree.remove(L.sp);
+  labels.length = 0;
+  for (const n of nodes){ if (n.mesh) tree.remove(n.mesh); if (n.glow) tree.remove(n.glow); if (n.line) tree.remove(n.line); }
+  nodes.length = 0;
+  nodes.push({ pos:rootPos, dir:new THREE.Vector3(0,1,0), depth:0, birth:performance.now() });
+  clickable.length = 0;
+  for (const w of weave) tree.remove(w);
+  weave.length = 0;
+  addrLast.clear();
+  if (myBranch){ tree.remove(myBranch); myBranch = null; myBranchTip = null; }
+  branchCount = 0;
+}
+
+function startReplay(){
+  if (replaying || !chron || !chron.trades || !chron.trades.length) return;
+  replaying = true; closePanels();
+  cardEl.className = '';
+  controls.autoRotate = true;
+  resetTree();
+  const T = chron.trades, N = T.length;
+  const DUR = Math.max(20000, Math.min(75000, N*160));
+  const every = Math.max(1, Math.round(N / (DUR/150)));   // cap labels+sound rate
+  const bar = document.getElementById('replaybar'); bar.classList.add('show');
+  const rdate = document.getElementById('rdate');
+  T.forEach((tr,i)=>{
+    replayTimers.push(setTimeout(()=>{
+      if (!replaying) return;
+      const loud = (i % every === 0) || i > N-15;
+      addBranch({ hash:'replay'+i, kind: tr.k==='b'?'buy':'sell',
+        usd: (tr.tok||0)*lastPrice,
+        label: loud ? `${fmt(tr.tok)} $NOPLAN` : null,
+        addr: tr.a, who: short(tr.a), ts: tr.ts*1000 });
+      if (loud) playTrade(tr.k==='b'?'buy':'sell', (tr.tok||0)*lastPrice);
+      rdate.textContent = new Date(tr.ts*1000).toLocaleDateString(undefined,{ year:'numeric', month:'short', day:'numeric' });
+    }, 600 + i*(DUR/N)));
+  });
+  replayTimers.push(setTimeout(()=>{ replaying = false; bar.classList.remove('show'); }, 600 + DUR + 2500));
+}
+
+/* ================= DAILY PROPHECY ================= */
+const P1 = ['The tree','The golden root','The void','The hundredth branch','The silent whale','The dust of the chart','The first buyer','The candle you feared','The unseen gardener','The oldest ring','The branch that broke','The sap','The seed below the floor','The crown','The shadow of the wick','The next block'];
+const P2 = ['does not ask for','remembers','never counts','grows through','forgives','devours','outlives','ignores','whispers to','was never promised','drinks','carries','does not fear','answers to no one, not even','blesses','withstands'];
+const P3 = ['permission','the red candles','your entry price','the roadmap that never was','those who sold','the next block','gravity','the plan','the paper hands','the noise','the exit','tomorrow','the floor','the top','the calendar','the market makers'];
+const P4 = ['What was sold in fear returns as a branch for someone braver.','A wallet that sleeps is still a wallet that holds.','The chart is a shadow; the tree is the thing itself.','No one waters it. That is why it grows.','Every dip is the root reaching deeper.','The block does not hurry, and yet everything is confirmed.','Those who ask when have already answered why not.','A branch cut in panic feeds the soil of the patient.','The whale moves in silence; the tree hears everything.','Green and red are the same color to the root.','What the paper hands release, the golden dust remembers.','The plan you are waiting for was never written.','Hold the branch and the branch holds back.','The tree grew last night while you checked the price.','Zero is far below the roots. It cannot reach.','The next ring forms whether you watch or not.'];
+const P5 = ['Only the tree.','Only the climb.','Only the golden dust.','The tree already knows.','Only the next branch.','Only holders and wind.','The root decides.','Only the sap flowing upward.','Only rings inside rings.','And that is the plan.','Only what grows in the dark.','Only the ledger and the light.'];
+const RUNES = ['✦','◈','☾','♄','☿','♆','✧','❖','⚚','☉','✶','◇'];
+
+let prophDay = null, prophLines = null;
+
+async function prophecyOpen(){
+  const day = new Date().toISOString().slice(0,10);
+  if (prophDay === day) return;
+  const bytes = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode('NOPLAN//'+day+'//'+CA)));
+  const pick = (arr,i)=> arr[bytes[i] % arr.length];
+  prophLines = [
+    `${pick(P1,0)} ${pick(P2,1)} ${pick(P3,2)}.`,
+    pick(P4,3),
+    `There is no plan. ${pick(P5,4)}`
+  ];
+  drawSigil(bytes, prophLines, day);
+  document.getElementById('prophtxt').textContent = prophLines.join('\n');
+  prophDay = day;
+}
+
+function drawSigil(b, lines, day){
+  const cv = document.getElementById('prophcv'); cv.width = 1080; cv.height = 1350;
+  const x = cv.getContext('2d');
+  cardFrame(x);
+  lsText(x, 'DAILY PROPHECY', '300 30px Segoe UI, sans-serif', '#6f6a5c', 540, 118, 14);
+  lsText(x, day, '400 40px Consolas, monospace', '#F2C41D', 540, 178, 8);
+  const cx0 = 540, cy0 = 590, R = 300;
+  const grad = x.createRadialGradient(cx0,cy0,0,cx0,cy0,R);
+  grad.addColorStop(0,'rgba(242,196,29,.16)'); grad.addColorStop(.6,'rgba(242,196,29,.03)'); grad.addColorStop(1,'rgba(0,0,0,0)');
+  x.fillStyle = grad; x.beginPath(); x.arc(cx0,cy0,R,0,7); x.fill();
+  x.strokeStyle = 'rgba(242,196,29,.85)'; x.lineWidth = 3;
+  x.beginPath(); x.arc(cx0,cy0,R,0,7); x.stroke();
+  x.lineWidth = 1; x.globalAlpha = .45;
+  x.beginPath(); x.arc(cx0,cy0,R-16,0,7); x.stroke();
+  x.globalAlpha = .3;
+  const ticks = 48 + b[10] % 24;
+  for (let i=0;i<ticks;i++){
+    const a = i/ticks*Math.PI*2;
+    const long = i % (3 + b[12] % 4) === 0;
+    x.beginPath();
+    x.moveTo(cx0+Math.cos(a)*(R-(long?34:24)), cy0+Math.sin(a)*(R-(long?34:24)));
+    x.lineTo(cx0+Math.cos(a)*(R-6), cy0+Math.sin(a)*(R-6));
+    x.stroke();
+  }
+  x.globalAlpha = 1;
+  const N = 6 + b[5] % 7, rot = b[7]/255*Math.PI*2;
+  x.lineWidth = 2;
+  for (let i=0;i<N;i++){
+    const a = rot + i/N*Math.PI*2;
+    x.globalAlpha = .7;
+    x.beginPath();
+    x.moveTo(cx0+Math.cos(a)*70, cy0+Math.sin(a)*70);
+    x.lineTo(cx0+Math.cos(a)*(R-52), cy0+Math.sin(a)*(R-52));
+    x.stroke();
+    x.globalAlpha = 1; x.fillStyle = '#F2C41D';
+    x.font = '44px Segoe UI Symbol, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillText(RUNES[b[(11+i) % 32] % RUNES.length], cx0+Math.cos(a)*(R-32), cy0+Math.sin(a)*(R-32));
+  }
+  x.textBaseline = 'alphabetic';
+  const poly = (r, k, rr, alpha)=>{
+    x.globalAlpha = alpha; x.beginPath();
+    for (let i=0;i<=k;i++){
+      const a = rr + i/k*Math.PI*2;
+      const px = cx0+Math.cos(a)*r, py = cy0+Math.sin(a)*r;
+      i ? x.lineTo(px,py) : x.moveTo(px,py);
+    }
+    x.stroke();
+  };
+  const k = 3 + b[6] % 4;
+  poly(150, k, b[8]/255*Math.PI, .8);
+  poly(96, k, -b[9]/255*Math.PI, .45);
+  x.globalAlpha = 1;
+  x.fillStyle = '#F2C41D'; x.beginPath(); x.arc(cx0,cy0,7,0,7); x.fill();
+  const wrap = (txt, y, font, color)=>{
+    x.font = font; x.fillStyle = color; x.textAlign = 'center';
+    const words = txt.split(' '); let line = '', yy = y;
+    for (const w of words){
+      const test = line ? line+' '+w : w;
+      if (x.measureText(test).width > 920 && line){ x.fillText(line, 540, yy); yy += 46; line = w; }
+      else line = test;
+    }
+    x.fillText(line, 540, yy);
+    return yy + 62;
+  };
+  let yy = 1005;
+  yy = wrap(lines[0], yy, 'italic 34px Georgia, serif', '#e8e2d2');
+  yy = wrap(lines[1], yy, 'italic 34px Georgia, serif', '#e8e2d2');
+  wrap(lines[2], yy, 'italic 600 34px Georgia, serif', '#F2C41D');
+  lsText(x, '$NOPLAN · noplangram.github.io/noplan', '400 24px Consolas, monospace', '#6f6a5c', 540, 1292, 4);
+}
+
+document.getElementById('psave').addEventListener('click', ()=> saveCanvas(document.getElementById('prophcv'), 'noplan-prophecy.png'));
+document.getElementById('pshare').addEventListener('click', ()=>
+  shareCanvas(document.getElementById('prophcv'), 'noplan-prophecy.png',
+    (prophLines ? prophLines.join(' ') + ' ' : '') + '$NOPLAN https://noplangram.github.io/noplan/'));
+document.getElementById('pcopy').addEventListener('click', async ()=>{
+  if (!prophLines) return;
+  try {
+    await navigator.clipboard.writeText(prophLines.join('\n') + '\n\n$NOPLAN — there is no plan.\nhttps://noplangram.github.io/noplan/');
+    showToast('prophecy copied');
+  } catch(e){}
+});
 </script>
 </body>
 </html>
