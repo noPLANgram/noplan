@@ -93,6 +93,7 @@
   #feed::-webkit-scrollbar-thumb{background:rgba(242,196,29,.3);border-radius:99px}
   #feed::-webkit-scrollbar-track{background:transparent}
   .tx{flex:none}
+  #feedbtn{display:none}
   .tx{pointer-events:auto;display:flex;align-items:center;gap:8px;font-family:Consolas,monospace;font-size:11px;
     color:#a79f8b;background:rgba(10,10,10,.5);border-left:2px solid var(--gold);padding:6px 10px;border-radius:0 8px 8px 0;
     backdrop-filter:blur(4px);text-decoration:none;opacity:0;transform:translateX(-14px);
@@ -210,7 +211,13 @@
     #tagline h1{letter-spacing:.16em;font-size:17px}
     #tagline p{margin-top:6px;letter-spacing:.26em;font-size:9.5px}
     #stats{margin-top:9px;gap:11px;font-size:10px}
-    #feed{top:238px;bottom:128px;width:52vw}
+    /* the tree stays unobstructed: feed is hidden until summoned */
+    #feed{display:none;z-index:20;top:66px;bottom:126px;left:8px;width:min(82vw,300px);
+      background:rgba(5,5,5,.9);border:1px solid rgba(242,196,29,.22);border-radius:12px;
+      padding:8px;backdrop-filter:blur(8px);
+      -webkit-mask-image:none;mask-image:none}
+    body.feedopen #feed{display:flex}
+    #feedbtn{display:inline-flex}
     .tx{font-size:10px;padding:5px 8px;gap:6px}
     .tx .who{max-width:70px;font-size:9px}
     #dnspanel{display:none}
@@ -288,6 +295,7 @@
     <span class="cp">copy</span>
   </div>
   <div class="row">
+    <button class="btn ghost" id="feedbtn">⇅ trades</button>
     <a class="btn tg" href="https://t.me/noplan_gram" target="_blank" rel="noopener">✦ Telegram</a>
     <a class="btn ghost" href="https://tonviewer.com/EQB3kSUC688buwPIwz34jX5KDB4O7naqlGLPoEAzB5LIh9qg" target="_blank" rel="noopener">Tonviewer</a>
     <a class="btn ghost" href="https://dexscreener.com/ton/EQDWnsxS1XujfKqchyRST4OScg4Fo92gECFBS7cOpXMRU_6C" target="_blank" rel="noopener">Chart</a>
@@ -395,6 +403,7 @@ scene.fog = new THREE.FogExp2(0x050505, 0.016);
 
 const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 400);
 camera.position.set(0, 14, 42);
+if (innerWidth < 640) camera.position.set(0, 16, 56);   // phones: pull back so the tree clears the HUD
 
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
@@ -406,7 +415,7 @@ controls.maxPolarAngle = Math.PI * 0.62;
 controls.enablePan = false;
 controls.autoRotate = true;
 controls.autoRotateSpeed = 0.55;
-canvas.addEventListener('pointerdown', ()=> controls.autoRotate = false);
+canvas.addEventListener('pointerdown', ()=>{ controls.autoRotate = false; document.body.classList.remove('feedopen'); });
 let idleTimer;
 canvas.addEventListener('pointerup', ()=>{ clearTimeout(idleTimer); idleTimer = setTimeout(()=> controls.autoRotate = true, 6000); });
 
@@ -626,7 +635,7 @@ canvas.addEventListener('pointerup', e => {
 // double-click empty space: pull back to the whole tree
 canvas.addEventListener('dblclick', ()=>{
   if (document.querySelector('.panel.show')) return;
-  focus = { point: new THREE.Vector3(0, 12, 0), dist: 42 };
+  focus = { point: new THREE.Vector3(0, 12, 0), dist: innerWidth < 640 ? 54 : 42 };
   cardEl.className = '';
 });
 
@@ -1058,6 +1067,7 @@ en: {
   pHead:'DAILY PROPHECY', noPlan:'There is no plan.',
   shareBranch:'my branch of the $NOPLAN tree — there is no plan. https://noplangram.github.io/noplan/',
   shareTail:'$NOPLAN — there is no plan.',
+  feedTgl:'⇅ trades',
 },
 ru: {
   whisper:'вход в пустоту', live:'живое дерево',
@@ -1090,6 +1100,7 @@ ru: {
   pHead:'ПРОРОЧЕСТВО ДНЯ', noPlan:'Плана нет.',
   shareBranch:'моя ветка дерева $NOPLAN — плана нет. https://noplangram.github.io/noplan/',
   shareTail:'$NOPLAN — плана нет.',
+  feedTgl:'⇅ сделки',
 }};
 let LANG = localStorage.getItem('noplan_lang')
   || (((navigator.language||'').toLowerCase().startsWith('ru')) ? 'ru' : 'en');
@@ -1137,6 +1148,7 @@ function applyLang(){
   document.getElementById('pcopy').textContent = tt('pCopy');
   document.getElementById('pshare').textContent = tt('pShare');
   q('#replaybar .s').textContent = tt('replayS');
+  document.getElementById('feedbtn').textContent = tt('feedTgl');
 }
 
 const langBtn = document.getElementById('lang');
@@ -1173,6 +1185,7 @@ function closePanels(){ panelIds.forEach(p => document.getElementById('p-'+p).cl
 document.querySelectorAll('.pnav').forEach(b => b.addEventListener('click', ()=> openPanel(b.dataset.p)));
 document.querySelectorAll('.panel .x').forEach(x => x.addEventListener('click', closePanels));
 addEventListener('keydown', e => { if (e.key === 'Escape') closePanels(); });
+document.getElementById('feedbtn').addEventListener('click', ()=> document.body.classList.toggle('feedopen'));
 
 /* ================= YOUR BRANCH ================= */
 const bIn = document.getElementById('baddr');
