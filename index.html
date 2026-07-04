@@ -192,8 +192,11 @@
   #replaybar.show{display:block}
   #replaybar .d{font-size:clamp(16px,3.4vw,26px);letter-spacing:.3em;color:var(--gold);font-family:Consolas,monospace;
     text-shadow:0 0 24px rgba(242,196,29,.5)}
+  #replaybar .t{margin-top:6px;font-family:Consolas,monospace;font-size:clamp(12px,2.8vw,16px);color:#e8e2d2;min-height:1.2em}
+  #replaybar .t b{font-weight:400;color:var(--gold)}
   #replaybar .s{margin-top:7px;font-size:10px;letter-spacing:.4em;color:#7d7663;text-transform:uppercase}
   button.btn{background:transparent;cursor:pointer;font-family:inherit}
+  .btn.on{border-color:var(--gold);color:var(--gold);box-shadow:0 0 16px rgba(242,196,29,.3)}
 
   /* ---------- mobile: strict vertical zones, nothing overlaps ----------
      header 0-56 · tagline 56-230 · feed 238-(footer) · footer pinned bottom */
@@ -302,6 +305,7 @@
     <button class="btn ghost pnav" data-p="branch">◈ Your Branch</button>
     <button class="btn ghost pnav" data-p="chron">❖ Chronicle</button>
     <button class="btn ghost pnav" data-p="proph">☾ Prophecy</button>
+    <button class="btn ghost" id="voy">⤿ Voyage</button>
   </div>
   <div class="hint">drag to explore · scroll / pinch to zoom · click a node to fly in · double-click to pull back</div>
 </footer>
@@ -371,6 +375,7 @@
 
 <div id="replaybar">
   <div class="d" id="rdate"></div>
+  <div class="t" id="rtrade"></div>
   <div class="s">replaying genesis — the whole history of the tree</div>
 </div>
 
@@ -415,7 +420,7 @@ controls.maxPolarAngle = Math.PI * 0.62;
 controls.enablePan = false;
 controls.autoRotate = true;
 controls.autoRotateSpeed = 0.55;
-canvas.addEventListener('pointerdown', ()=>{ controls.autoRotate = false; document.body.classList.remove('feedopen'); });
+canvas.addEventListener('pointerdown', ()=>{ if (voyage) endVoyage(); controls.autoRotate = false; document.body.classList.remove('feedopen'); });
 let idleTimer;
 canvas.addEventListener('pointerup', ()=>{ clearTimeout(idleTimer); idleTimer = setTimeout(()=> controls.autoRotate = true, 6000); });
 
@@ -579,7 +584,7 @@ function addBranch(trade){
     while (labels.length > 10){ const old = labels.shift(); tree.remove(old.sp); }
   }
 
-  const node = { pos:to, dir, depth:parent.depth+1, mesh:core, glow, line, birth:performance.now() };
+  const node = { pos:to, dir, depth:parent.depth+1, mesh:core, glow, line, birth:performance.now(), trade };
   nodes.push(node);
   if (trade.addr) addrLast.set(trade.addr, node);
   growing.push({ line, from:parent.pos.clone(), to, core, glow, ring, label, start:performance.now(), dur:750, glowScale: 0.6 + mag*0.8 });
@@ -671,8 +676,10 @@ function loop(now){
     L.sp.position.y += 0.0035;
   }
 
-  // camera fly-to on focus
-  if (focus){
+  // voyage: the ship flies the spline through every branch; it owns the camera
+  if (voyage){
+    stepVoyage(now);
+  } else if (focus){
     controls.target.lerp(focus.point, 0.07);
     const dir = camera.position.clone().sub(focus.point);
     const d = dir.length(); dir.normalize();
@@ -697,7 +704,7 @@ function loop(now){
   }
   dust.geometry.attributes.position.needsUpdate = true;
 
-  controls.update();
+  if (!voyage) controls.update();
   renderer.render(scene, camera);
 }
 requestAnimationFrame(loop);
@@ -1068,6 +1075,7 @@ en: {
   shareBranch:'my branch of the $NOPLAN tree — there is no plan. https://noplangram.github.io/noplan/',
   shareTail:'$NOPLAN — there is no plan.',
   feedTgl:'⇅ trades',
+  navVoy:'⤿ Voyage', voyS:'voyage — flying through every branch of the tree · tap to land',
 },
 ru: {
   whisper:'вход в пустоту', live:'живое дерево',
@@ -1101,6 +1109,7 @@ ru: {
   shareBranch:'моя ветка дерева $NOPLAN — плана нет. https://noplangram.github.io/noplan/',
   shareTail:'$NOPLAN — плана нет.',
   feedTgl:'⇅ сделки',
+  navVoy:'⤿ Полёт', voyS:'полёт сквозь каждую ветку дерева · тапни, чтобы приземлиться',
 }};
 let LANG = localStorage.getItem('noplan_lang')
   || (((navigator.language||'').toLowerCase().startsWith('ru')) ? 'ru' : 'en');
@@ -1149,6 +1158,7 @@ function applyLang(){
   document.getElementById('pshare').textContent = tt('pShare');
   q('#replaybar .s').textContent = tt('replayS');
   document.getElementById('feedbtn').textContent = tt('feedTgl');
+  document.getElementById('voy').textContent = tt('navVoy');
 }
 
 const langBtn = document.getElementById('lang');
@@ -1184,7 +1194,7 @@ function openPanel(k){
 function closePanels(){ panelIds.forEach(p => document.getElementById('p-'+p).classList.remove('show')); }
 document.querySelectorAll('.pnav').forEach(b => b.addEventListener('click', ()=> openPanel(b.dataset.p)));
 document.querySelectorAll('.panel .x').forEach(x => x.addEventListener('click', closePanels));
-addEventListener('keydown', e => { if (e.key === 'Escape') closePanels(); });
+addEventListener('keydown', e => { if (e.key === 'Escape'){ closePanels(); endVoyage(); } });
 document.getElementById('feedbtn').addEventListener('click', ()=> document.body.classList.toggle('feedopen'));
 
 /* ================= YOUR BRANCH ================= */
@@ -1338,6 +1348,7 @@ function growMyBranch(d){
 
 document.getElementById('bfly').addEventListener('click', ()=>{
   if (!myBranchTip || replaying) return;   // the replay owns the camera
+  endVoyage();
   closePanels(); controls.autoRotate = false;
   focus = { point: myBranchTip.clone(), dist: 8 };
 });
@@ -1463,6 +1474,7 @@ function resetTree(){
 function startReplay(){
   if (replaying || !chron || !chron.trades || !chron.trades.length) return;
   replaying = true; closePanels();
+  endVoyage();                  // the replay takes the tree; the ship lands
   cardEl.className = '';
   focus = null;                 // cancel any camera flight in progress
   controls.autoRotate = true;
@@ -1479,6 +1491,7 @@ function startReplay(){
       addBranch({ hash:'replay'+i, kind: tr.k==='b'?'buy':'sell',
         usd: (tr.tok||0)*lastPrice,
         label: loud ? `${fmt(tr.tok)} $NOPLAN` : null,
+        info: `${fmt(tr.tok)} $NOPLAN`,
         addr: tr.a, who: short(tr.a), ts: tr.ts*1000 });
       if (loud) playTrade(tr.k==='b'?'buy':'sell', (tr.tok||0)*lastPrice);
       rdate.textContent = new Date(tr.ts*1000).toLocaleDateString(undefined,{ year:'numeric', month:'short', day:'numeric' });
@@ -1647,10 +1660,77 @@ async function seedFromChronicle(){
       addBranch({ hash:'seed'+i, kind: tr.k==='b'?'buy':'sell',
         usd:(tr.tok||0)*lastPrice,
         label: i > N-25 ? `${fmt(tr.tok)} $NOPLAN` : null,
+        info: `${fmt(tr.tok)} $NOPLAN`,
         addr: tr.a, who: short(tr.a), ts: tr.ts*1000 });
     }, 600 + i*90);
   });
 }
+
+/* ================= VOYAGE — fly the ship through every branch =================
+   a separate visualization: the camera becomes a ship gliding along a smooth
+   spline through every node of the tree, in the order the branches grew.
+   over each node the HUD shows the trade: direction, amount, wallet or .ton */
+let voyage = null;
+const voyBtn = document.getElementById('voy');
+const VOY_LIFT = new THREE.Vector3(0, 0.55, 0);
+
+function startVoyage(){
+  if (replaying) return;                    // the replay owns the tree
+  if (voyage){ endVoyage(); return; }
+  const src = nodes.filter(n => n.pos);
+  if (src.length < 5) return;
+  closePanels(); cardEl.className = '';
+  document.body.classList.remove('feedopen');
+  focus = null; controls.autoRotate = false; controls.enabled = false;
+  const path = new THREE.CatmullRomCurve3(src.map(n => n.pos.clone()), false, 'centripetal', 0.5);
+  voyage = {
+    path,
+    meta: src.map(n => n.trade || null),
+    n: src.length, lastIdx: -1,
+    start: performance.now(),
+    dur: Math.min(90000, Math.max(22000, src.length * 420)),
+  };
+  document.getElementById('replaybar').classList.add('show');
+  document.querySelector('#replaybar .s').textContent = tt('voyS');
+  voyBtn.classList.add('on');
+}
+
+function endVoyage(){
+  if (!voyage) return;
+  voyage = null;
+  document.getElementById('replaybar').classList.remove('show');
+  document.getElementById('rtrade').textContent = '';
+  document.querySelector('#replaybar .s').textContent = tt('replayS');
+  voyBtn.classList.remove('on');
+  controls.enabled = true;
+  controls.autoRotate = true;
+  focus = { point: new THREE.Vector3(0, 12, 0), dist: innerWidth < 640 ? 54 : 42 };
+}
+
+function stepVoyage(now){
+  const pr = (now - voyage.start) / voyage.dur;
+  if (pr >= 1){ endVoyage(); return; }
+  const tc = Math.min(pr, 0.999);
+  const pos = voyage.path.getPointAt(tc).add(VOY_LIFT);
+  const ahead = voyage.path.getPointAt(Math.min(tc + 0.012, 1));
+  camera.position.lerp(pos, 0.14);
+  camera.lookAt(ahead);
+  const idx = Math.min(voyage.n - 1, Math.round(tc * (voyage.n - 1)));
+  if (idx === voyage.lastIdx) return;
+  voyage.lastIdx = idx;
+  const tr = voyage.meta[idx];
+  if (!tr) return;
+  if (tr.ts) document.getElementById('rdate').textContent =
+    new Date(tr.ts).toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' });
+  const name = (tr.addr && dnsCache.get(tr.addr)) || tr.who || short(tr.addr);
+  const arrow = tr.kind === 'buy' ? '▲' : tr.kind === 'sell' ? '▼' : '✦';
+  const col = tr.kind === 'buy' ? '#59d98c' : tr.kind === 'sell' ? '#e05252' : '#F2C41D';
+  const amt = tr.label || tr.info || '';
+  document.getElementById('rtrade').innerHTML =
+    `<span style="color:${col}">${arrow}</span> ${amt ? amt + ' · ' : ''}<b>${name}</b>`;
+  if (tr.addr && !dnsCache.has(tr.addr)) resolveDNS(tr.addr, ()=>{}, true);
+}
+voyBtn.addEventListener('click', startVoyage);
 
 /* boot: full history first, live polling after */
 (async ()=>{
