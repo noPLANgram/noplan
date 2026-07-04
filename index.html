@@ -194,14 +194,37 @@
   #replaybar .s{margin-top:7px;font-size:10px;letter-spacing:.4em;color:#7d7663;text-transform:uppercase}
   button.btn{background:transparent;cursor:pointer;font-family:inherit}
 
+  /* ---------- mobile: strict vertical zones, nothing overlaps ----------
+     header 0-56 · tagline 56-230 · feed 238-(footer) · footer pinned bottom */
   @media (max-width:640px){
     .brand .sub{display:none}
-    .panel{padding:20px 16px 18px}
-    .row .btn{padding:8px 13px;letter-spacing:.16em}
-    #feed{top:210px;bottom:160px;width:46vw}
-    #dnspanel{top:210px;bottom:170px;width:44vw}
-    #tagline h1{letter-spacing:.2em}
+    .brand img{width:34px;height:34px}
+    .brand .name{font-size:15px}
+    header.hud{padding:10px 12px}
+    .hudright{gap:7px}
+    #snd,#lang{width:32px;height:32px;font-size:13px}
+    #lang{font-size:10px}
+    .live{padding:6px 10px}
     .live span{display:none}
+    #tagline{top:62px}
+    #tagline h1{letter-spacing:.16em;font-size:17px}
+    #tagline p{margin-top:6px;letter-spacing:.26em;font-size:9.5px}
+    #stats{margin-top:9px;gap:11px;font-size:10px}
+    #feed{top:238px;bottom:128px;width:52vw}
+    .tx{font-size:10px;padding:5px 8px;gap:6px}
+    .tx .who{max-width:70px;font-size:9px}
+    #dnspanel{display:none}
+    #card{bottom:134px;right:8px;width:min(78vw,240px)}
+    footer.hud{gap:6px;padding:8px 8px 10px}
+    .ca{padding:8px 10px;gap:8px}
+    .row{flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;max-width:100%;
+      padding:2px 6px;scrollbar-width:none}
+    .row::-webkit-scrollbar{display:none}
+    .row .btn{flex:none;padding:8px 13px;letter-spacing:.14em;font-size:10.5px}
+    .hint{display:none}
+    .panel{padding:18px 14px 16px;max-height:80vh;width:94vw}
+    #replaybar{top:19%}
+    #toast{bottom:40%}
   }
 </style>
 </head>
@@ -585,6 +608,7 @@ document.getElementById('cardx').addEventListener('click', ()=> cardEl.className
 let downAt = 0, downXY = [0,0];
 canvas.addEventListener('pointerdown', e => { downAt = performance.now(); downXY = [e.clientX, e.clientY]; focus = null; });
 canvas.addEventListener('pointerup', e => {
+  if (document.querySelector('.panel.show')) return;   // an open panel owns the screen
   if (performance.now() - downAt > 300) return;
   if (Math.hypot(e.clientX-downXY[0], e.clientY-downXY[1]) > 8) return;
   ptr.x = (e.clientX/innerWidth)*2-1; ptr.y = -(e.clientY/innerHeight)*2+1;
@@ -601,6 +625,7 @@ canvas.addEventListener('pointerup', e => {
 });
 // double-click empty space: pull back to the whole tree
 canvas.addEventListener('dblclick', ()=>{
+  if (document.querySelector('.panel.show')) return;
   focus = { point: new THREE.Vector3(0, 12, 0), dist: 42 };
   cardEl.className = '';
 });
@@ -1157,9 +1182,11 @@ let myBranch = null, myBranchTip = null, lastCard = null;
 document.getElementById('bgo').addEventListener('click', findMyBranch);
 bIn.addEventListener('keydown', e => { if (e.key === 'Enter') findMyBranch(); });
 
+let bBusy = false;
 async function findMyBranch(){
   const q = bIn.value.trim();
-  if (!q) return;
+  if (!q || bBusy) return;
+  bBusy = true;
   document.getElementById('bres').style.display = 'none';
   bMsg.textContent = tt('bAsk');
   try {
@@ -1211,6 +1238,7 @@ async function findMyBranch(){
   } catch(e){
     bMsg.textContent = tt('bUnknown');
   }
+  bBusy = false;
 }
 
 function renderBranchResult(d){
@@ -1296,7 +1324,7 @@ function growMyBranch(d){
 }
 
 document.getElementById('bfly').addEventListener('click', ()=>{
-  if (!myBranchTip) return;
+  if (!myBranchTip || replaying) return;   // the replay owns the camera
   closePanels(); controls.autoRotate = false;
   focus = { point: myBranchTip.clone(), dist: 8 };
 });
@@ -1423,6 +1451,7 @@ function startReplay(){
   if (replaying || !chron || !chron.trades || !chron.trades.length) return;
   replaying = true; closePanels();
   cardEl.className = '';
+  focus = null;                 // cancel any camera flight in progress
   controls.autoRotate = true;
   resetTree();
   const T = chron.trades, N = T.length;
