@@ -305,7 +305,7 @@
     <button class="btn ghost pnav" data-p="branch">◈ Your Branch</button>
     <button class="btn ghost pnav" data-p="chron">❖ Chronicle</button>
     <button class="btn ghost pnav" data-p="proph">☾ Prophecy</button>
-    <button class="btn ghost" id="voy">⤿ Voyage</button>
+    <button class="btn ghost" id="pulsebtn">✴ Pulse</button>
   </div>
   <div class="hint">drag to explore · scroll / pinch to zoom · click a node to fly in · double-click to pull back</div>
 </footer>
@@ -420,7 +420,7 @@ controls.maxPolarAngle = Math.PI * 0.62;
 controls.enablePan = false;
 controls.autoRotate = true;
 controls.autoRotateSpeed = 0.55;
-canvas.addEventListener('pointerdown', ()=>{ if (voyage) endVoyage(); controls.autoRotate = false; document.body.classList.remove('feedopen'); });
+canvas.addEventListener('pointerdown', ()=>{ controls.autoRotate = false; document.body.classList.remove('feedopen'); });
 let idleTimer;
 canvas.addEventListener('pointerup', ()=>{ clearTimeout(idleTimer); idleTimer = setTimeout(()=> controls.autoRotate = true, 6000); });
 
@@ -584,7 +584,8 @@ function addBranch(trade){
     while (labels.length > 10){ const old = labels.shift(); tree.remove(old.sp); }
   }
 
-  const node = { pos:to, dir, depth:parent.depth+1, mesh:core, glow, line, birth:performance.now(), trade };
+  const node = { pos:to, dir, depth:parent.depth+1, mesh:core, glow, line, birth:performance.now(),
+    trade, from: parent.pos.clone(), glowBase: 0.6 + mag*0.8 };
   nodes.push(node);
   if (trade.addr) addrLast.set(trade.addr, node);
   growing.push({ line, from:parent.pos.clone(), to, core, glow, ring, label, start:performance.now(), dur:750, glowScale: 0.6 + mag*0.8 });
@@ -676,10 +677,16 @@ function loop(now){
     L.sp.position.y += 0.0035;
   }
 
-  // voyage: the ship flies the spline through every branch; it owns the camera
-  if (voyage){
-    stepVoyage(now);
-  } else if (focus){
+  // sap pulse: a slow golden wave travels the branches; the camera stays yours
+  if (pulse) stepPulse(now);
+  for (let i=flares.length-1;i>=0;i--){
+    const F = flares[i], e = (now - F.start)/900;
+    if (e >= 1){ F.glow.scale.setScalar(F.base); flares.splice(i,1); continue; }
+    F.glow.scale.setScalar(F.base * (1 + 1.5*(1-e)*(1-e)));
+  }
+
+  // camera fly-to on focus
+  if (focus){
     controls.target.lerp(focus.point, 0.07);
     const dir = camera.position.clone().sub(focus.point);
     const d = dir.length(); dir.normalize();
@@ -704,7 +711,7 @@ function loop(now){
   }
   dust.geometry.attributes.position.needsUpdate = true;
 
-  if (!voyage) controls.update();
+  controls.update();
   renderer.render(scene, camera);
 }
 requestAnimationFrame(loop);
@@ -1075,7 +1082,7 @@ en: {
   shareBranch:'my branch of the $NOPLAN tree — there is no plan. https://noplangram.github.io/noplan/',
   shareTail:'$NOPLAN — there is no plan.',
   feedTgl:'⇅ trades',
-  navVoy:'⤿ Voyage', voyS:'voyage — flying through every branch of the tree · tap to land',
+  navPulse:'✴ Pulse', pulseS:'golden sap surges through every branch — the whole history in one wave',
 },
 ru: {
   whisper:'вход в пустоту', live:'живое дерево',
@@ -1109,7 +1116,7 @@ ru: {
   shareBranch:'моя ветка дерева $NOPLAN — плана нет. https://noplangram.github.io/noplan/',
   shareTail:'$NOPLAN — плана нет.',
   feedTgl:'⇅ сделки',
-  navVoy:'⤿ Полёт', voyS:'полёт сквозь каждую ветку дерева · тапни, чтобы приземлиться',
+  navPulse:'✴ Пульс', pulseS:'золотой сок течёт по всем веткам — вся история одной волной',
 }};
 let LANG = localStorage.getItem('noplan_lang')
   || (((navigator.language||'').toLowerCase().startsWith('ru')) ? 'ru' : 'en');
@@ -1158,7 +1165,7 @@ function applyLang(){
   document.getElementById('pshare').textContent = tt('pShare');
   q('#replaybar .s').textContent = tt('replayS');
   document.getElementById('feedbtn').textContent = tt('feedTgl');
-  document.getElementById('voy').textContent = tt('navVoy');
+  document.getElementById('pulsebtn').textContent = tt('navPulse');
 }
 
 const langBtn = document.getElementById('lang');
@@ -1194,7 +1201,7 @@ function openPanel(k){
 function closePanels(){ panelIds.forEach(p => document.getElementById('p-'+p).classList.remove('show')); }
 document.querySelectorAll('.pnav').forEach(b => b.addEventListener('click', ()=> openPanel(b.dataset.p)));
 document.querySelectorAll('.panel .x').forEach(x => x.addEventListener('click', closePanels));
-addEventListener('keydown', e => { if (e.key === 'Escape'){ closePanels(); endVoyage(); } });
+addEventListener('keydown', e => { if (e.key === 'Escape'){ closePanels(); endPulse(); } });
 document.getElementById('feedbtn').addEventListener('click', ()=> document.body.classList.toggle('feedopen'));
 
 /* ================= YOUR BRANCH ================= */
@@ -1348,7 +1355,6 @@ function growMyBranch(d){
 
 document.getElementById('bfly').addEventListener('click', ()=>{
   if (!myBranchTip || replaying) return;   // the replay owns the camera
-  endVoyage();
   closePanels(); controls.autoRotate = false;
   focus = { point: myBranchTip.clone(), dist: 8 };
 });
@@ -1474,7 +1480,7 @@ function resetTree(){
 function startReplay(){
   if (replaying || !chron || !chron.trades || !chron.trades.length) return;
   replaying = true; closePanels();
-  endVoyage();                  // the replay takes the tree; the ship lands
+  endPulse();                   // the replay takes the tree; the wave rests
   cardEl.className = '';
   focus = null;                 // cancel any camera flight in progress
   controls.autoRotate = true;
@@ -1666,59 +1672,17 @@ async function seedFromChronicle(){
   });
 }
 
-/* ================= VOYAGE — fly the ship through every branch =================
-   a separate visualization: the camera becomes a ship gliding along a smooth
-   spline through every node of the tree, in the order the branches grew.
-   over each node the HUD shows the trade: direction, amount, wallet or .ton */
-let voyage = null;
-const voyBtn = document.getElementById('voy');
-const VOY_LIFT = new THREE.Vector3(0, 0.55, 0);
+/* ================= SAP PULSE — the tree's heartbeat =================
+   a separate visualization: a slow golden droplet of sap is born in the
+   root and travels every branch in the order they grew — each node swells
+   softly in its wallet color as the wave passes, the HUD names the trade
+   (amount + wallet or .ton). the camera stays fully in your hands.
+   deliberately gentle: slow wave, soft swells, no strobing. */
+let pulse = null;
+const flares = [];
+const pulseBtn = document.getElementById('pulsebtn');
 
-function startVoyage(){
-  if (replaying) return;                    // the replay owns the tree
-  if (voyage){ endVoyage(); return; }
-  const src = nodes.filter(n => n.pos);
-  if (src.length < 5) return;
-  closePanels(); cardEl.className = '';
-  document.body.classList.remove('feedopen');
-  focus = null; controls.autoRotate = false; controls.enabled = false;
-  const path = new THREE.CatmullRomCurve3(src.map(n => n.pos.clone()), false, 'centripetal', 0.5);
-  voyage = {
-    path,
-    meta: src.map(n => n.trade || null),
-    n: src.length, lastIdx: -1,
-    start: performance.now(),
-    dur: Math.min(90000, Math.max(22000, src.length * 420)),
-  };
-  document.getElementById('replaybar').classList.add('show');
-  document.querySelector('#replaybar .s').textContent = tt('voyS');
-  voyBtn.classList.add('on');
-}
-
-function endVoyage(){
-  if (!voyage) return;
-  voyage = null;
-  document.getElementById('replaybar').classList.remove('show');
-  document.getElementById('rtrade').textContent = '';
-  document.querySelector('#replaybar .s').textContent = tt('replayS');
-  voyBtn.classList.remove('on');
-  controls.enabled = true;
-  controls.autoRotate = true;
-  focus = { point: new THREE.Vector3(0, 12, 0), dist: innerWidth < 640 ? 54 : 42 };
-}
-
-function stepVoyage(now){
-  const pr = (now - voyage.start) / voyage.dur;
-  if (pr >= 1){ endVoyage(); return; }
-  const tc = Math.min(pr, 0.999);
-  const pos = voyage.path.getPointAt(tc).add(VOY_LIFT);
-  const ahead = voyage.path.getPointAt(Math.min(tc + 0.012, 1));
-  camera.position.lerp(pos, 0.14);
-  camera.lookAt(ahead);
-  const idx = Math.min(voyage.n - 1, Math.round(tc * (voyage.n - 1)));
-  if (idx === voyage.lastIdx) return;
-  voyage.lastIdx = idx;
-  const tr = voyage.meta[idx];
+function showTradeHUD(tr){
   if (!tr) return;
   if (tr.ts) document.getElementById('rdate').textContent =
     new Date(tr.ts).toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' });
@@ -1730,7 +1694,51 @@ function stepVoyage(now){
     `<span style="color:${col}">${arrow}</span> ${amt ? amt + ' · ' : ''}<b>${name}</b>`;
   if (tr.addr && !dnsCache.has(tr.addr)) resolveDNS(tr.addr, ()=>{}, true);
 }
-voyBtn.addEventListener('click', startVoyage);
+
+function startPulse(){
+  if (replaying) return;                    // the replay owns the tree
+  if (pulse){ endPulse(); return; }
+  const order = nodes.filter(n => n.pos && n.from);
+  if (order.length < 3) return;
+  closePanels(); cardEl.className = '';
+  const spark = new THREE.Sprite(new THREE.SpriteMaterial({
+    map:GLOW, color:GOLD, transparent:true, opacity:.9, depthWrite:false, blending:THREE.AdditiveBlending }));
+  spark.scale.setScalar(2.4);
+  spark.position.copy(order[0].from);
+  tree.add(spark);
+  pulse = { order, i:0, t0:performance.now(),
+    seg: Math.max(240, Math.min(500, 60000/order.length)), spark };
+  document.getElementById('replaybar').classList.add('show');
+  document.querySelector('#replaybar .s').textContent = tt('pulseS');
+  pulseBtn.classList.add('on');
+}
+
+function endPulse(){
+  if (!pulse) return;
+  tree.remove(pulse.spark);
+  pulse = null;
+  document.getElementById('replaybar').classList.remove('show');
+  document.getElementById('rtrade').textContent = '';
+  document.querySelector('#replaybar .s').textContent = tt('replayS');
+  pulseBtn.classList.remove('on');
+}
+
+function stepPulse(now){
+  let n = pulse.order[pulse.i];
+  let p = (now - pulse.t0) / pulse.seg;
+  while (p >= 1){
+    if (n.glow && n.glowBase) flares.push({ glow:n.glow, base:n.glowBase, start:now });
+    showTradeHUD(n.trade);
+    if (soundOn && actx && actx.state === 'running' && pulse.i % 8 === 0)
+      tone(620 + Math.random()*300, 1150, 0.5, 'sine', 0.05);
+    pulse.i++; pulse.t0 += pulse.seg;
+    if (pulse.i >= pulse.order.length){ endPulse(); return; }
+    n = pulse.order[pulse.i];
+    p = (now - pulse.t0) / pulse.seg;
+  }
+  pulse.spark.position.lerpVectors(n.from, n.pos, Math.max(p, 0));
+}
+pulseBtn.addEventListener('click', startPulse);
 
 /* boot: full history first, live polling after */
 (async ()=>{
